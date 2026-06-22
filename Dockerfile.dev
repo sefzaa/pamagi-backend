@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine
+FROM golang:1.26-alpine
 
 # Install git dan dependencies yang dibutuhkan
 RUN apk update && apk add --no-cache git make
@@ -10,7 +10,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Install Air untuk live reloading & Golang Migrate
+# Install Air (sekarang bisa pakai latest karena Go sudah v1.26), Migrate, dan Swag
 RUN go install github.com/air-verse/air@latest
 RUN go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 RUN go install github.com/swaggo/swag/cmd/swag@latest
