@@ -1,0 +1,16 @@
+.DS_Store
+bin/
+/.idea
+.idea
+.env
+.vscode
+
+
+# Environments
+.env
+
+# Go workspace file
+go.work
+
+# Air build directory (Folder sementara dari Air)
+tmp/
