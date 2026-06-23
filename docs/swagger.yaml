@@ -19,6 +19,60 @@ definitions:
       user:
         $ref: '#/definitions/dto.UserResponse'
     type: object
+  dto.CategoryRes:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.CategoryResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.CreateCategoryRequest:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateWordRequest:
+    properties:
+      category_ids:
+        description: Array ID kategori (Opsional)
+        items:
+          type: string
+        type: array
+      examples:
+        description: Array contoh kalimat (Opsional)
+        items:
+          $ref: '#/definitions/dto.ExampleRequest'
+        type: array
+      part_of_speech:
+        type: string
+      russian_word:
+        type: string
+      translation:
+        type: string
+    required:
+    - part_of_speech
+    - russian_word
+    - translation
+    type: object
+  dto.ExampleRequest:
+    properties:
+      russian_sentence:
+        type: string
+      translated_sentence:
+        type: string
+    required:
+    - russian_sentence
+    - translated_sentence
+    type: object
   dto.LoginRequest:
     properties:
       identifier:
@@ -62,6 +116,38 @@ definitions:
       username:
         type: string
     type: object
+  dto.WordExampleRes:
+    properties:
+      id:
+        type: string
+      russian_sentence:
+        type: string
+      translated_sentence:
+        type: string
+    type: object
+  dto.WordResponse:
+    properties:
+      categories:
+        items:
+          $ref: '#/definitions/dto.CategoryRes'
+        type: array
+      created_at:
+        type: string
+      examples:
+        items:
+          $ref: '#/definitions/dto.WordExampleRes'
+        type: array
+      id:
+        type: string
+      is_favorite:
+        type: boolean
+      part_of_speech:
+        type: string
+      russian_word:
+        type: string
+      translation:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -69,6 +155,50 @@ info:
   title: Pamagi API
   version: "1.0"
 paths:
+  /categories:
+    get:
+      description: Menampilkan semua daftar kategori milik user yang sedang login
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.CategoryResponse'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Ambil Daftar Kategori
+      tags:
+      - Categories
+    post:
+      consumes:
+      - application/json
+      description: 'Menyimpan kategori baru milik user (misal: "Kata Kerja A1")'
+      parameters:
+      - description: Data Kategori
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Tambah Kategori Baru
+      tags:
+      - Categories
   /login:
     post:
       consumes:
@@ -152,6 +282,88 @@ paths:
       summary: Register user baru
       tags:
       - Auth
+  /words:
+    get:
+      description: Menampilkan daftar kosakata dengan fitur filter
+      parameters:
+      - description: Filter by Category ID
+        in: query
+        name: category_id
+        type: string
+      - description: Filter by Part of Speech (e.g., NOUN)
+        in: query
+        name: part_of_speech
+        type: string
+      - description: Filter by Favorite status
+        in: query
+        name: is_favorite
+        type: boolean
+      - description: Sorting (newest, oldest)
+        in: query
+        name: sort_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.WordResponse'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Ambil Daftar Kosakata
+      tags:
+      - Words
+    post:
+      consumes:
+      - application/json
+      description: Menyimpan kosakata beserta contoh kalimat opsional
+      parameters:
+      - description: Data Kosakata
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateWordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Tambah Kosakata Baru
+      tags:
+      - Words
+  /words/{id}/favorite:
+    put:
+      description: Menandai atau menghapus tanda favorit pada suatu kata
+      parameters:
+      - description: ID Kosakata
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Ubah Status Favorit
+      tags:
+      - Words
 securityDefinitions:
   ApiKeyAuth:
     in: header

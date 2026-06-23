@@ -1,39 +1,28 @@
 package route
 
 import (
-	"pamagi/api/controller"
-	"pamagi/bootstrap"
-	"pamagi/repository"
-	"pamagi/usecase"
 	"pamagi/api/middleware"
-
+	"pamagi/bootstrap"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
-
-
 )
 
-func Setup(env *bootstrap.Env, db *gorm.DB, redis *redis.Client, gin *gin.Engine) {
-	// Inisialisasi Auth Layer dengan menyuntikkan redis client
-	authRepository := repository.NewAuthRepository(db)
-	authUsecase := usecase.NewAuthUsecase(authRepository, env, redis)
-	authController := &controller.AuthController{
-		AuthUsecase: authUsecase,
-	}
+func Setup(env *bootstrap.Env, db *gorm.DB, redis *redis.Client, ginEngine *gin.Engine) {
+	// 1. Siapkan Grup Rute Publik
+	publicRouter := ginEngine.Group("")
 
-	publicRouter := gin.Group("")
-	{
-		publicRouter.POST("/register", authController.Register)
-		publicRouter.POST("/login", authController.Login)
-	}
+	// 2. Siapkan Grup Rute Private (Dilindungi Middleware JWT)
+	protectedRouter := ginEngine.Group("")
+	protectedRouter.Use(middleware.JwtAuthMiddleware(env.AccessTokenSecret))
 
-
-	// 2. Rute Private (Wajib bawa token)
-	protectedRouter := gin.Group("")
-	protectedRouter.Use(middleware.JwtAuthMiddleware(env.AccessTokenSecret)) 
-	{
-		protectedRouter.POST("/logout", authController.Logout)
-	}
+	// 3. Panggil dan daftarkan semua Router Fitur di sini
+	NewAuthRouter(env, db, redis, publicRouter, protectedRouter)
+	NewWordRouter(db, protectedRouter)
+	NewCategoryRouter(db, protectedRouter)
+	
+	// Nanti kalau ada fitur baru, tinggal tambah di sini:
+	// NewQuizRouter(db, protectedRouter)
+	// NewProfileRouter(db, protectedRouter)
 }
