@@ -3,19 +3,22 @@ package bootstrap
 import (
 	"context"
 	"log"
+	"fmt" // Tambahkan ini
 
 	"github.com/redis/go-redis/v9"
 )
 
 func NewRedis(env *Env) *redis.Client {
-	// Koneksi ke host "redis" dan port 6379 (Sesuai dengan nama service di docker-compose)
+	// Dapatkan alamat dari env.REDIS_HOST (pastikan struct Env kamu punya field ini)
+	// Jika belum, gunakan fmt.Sprintf untuk menggabungkan host dan port
+	addr := fmt.Sprintf("%s:%s", env.RedisHost, env.RedisPort)
+
 	client := redis.NewClient(&redis.Options{
-		Addr:     "redis:6379", 
-		Password: "", // Default Redis di Docker kita tidak pakai password
-		DB:       0,  // Default DB
+		Addr:     addr, 
+		Password: env.RedisPassword, 
+		DB:       0,
 	})
 
-	// Test koneksi
 	_, err := client.Ping(context.Background()).Result()
 	if err != nil {
 		log.Fatal("Gagal koneksi ke Redis: ", err)

@@ -22,6 +22,8 @@ import (
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
 // @name Authorization
+// @host pamagi.mydm.cloud
+// @BasePath /
 func main() {
 	// Inisialisasi Environment dan Database MySQL
 	app := bootstrap.App()
