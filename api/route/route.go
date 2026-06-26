@@ -31,6 +31,7 @@ func Setup(env *bootstrap.Env, db *gorm.DB, redis *redis.Client, ginEngine *gin.
 	NewAuthRouter(env, db, redis, publicRouter, protectedRouter)
 	NewWordRouter(db, protectedRouter)
 	NewCategoryRouter(db, protectedRouter)
+	NewQuizRouter(db, protectedRouter)
 	
 	// Nanti kalau ada fitur baru, tinggal tambah di sini:
 	// NewQuizRouter(db, protectedRouter)

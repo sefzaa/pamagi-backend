@@ -10,37 +10,37 @@ definitions:
       message:
         type: string
     type: object
-  pamagi_domain_dto.AuthResponse:
+  dto.AuthResponse:
     properties:
       access_token:
         type: string
       refresh_token:
         type: string
       user:
-        $ref: '#/definitions/pamagi_domain_dto.UserResponse'
+        $ref: '#/definitions/dto.UserResponse'
     type: object
-  pamagi_domain_dto.CategoryRes:
+  dto.CategoryRes:
     properties:
       id:
         type: string
       name:
         type: string
     type: object
-  pamagi_domain_dto.CategoryResponse:
+  dto.CategoryResponse:
     properties:
       id:
         type: string
       name:
         type: string
     type: object
-  pamagi_domain_dto.CreateCategoryRequest:
+  dto.CreateCategoryRequest:
     properties:
       name:
         type: string
     required:
     - name
     type: object
-  pamagi_domain_dto.CreateWordRequest:
+  dto.CreateWordRequest:
     properties:
       category_ids:
         description: Array ID kategori (Opsional)
@@ -50,7 +50,7 @@ definitions:
       examples:
         description: Array contoh kalimat (Opsional)
         items:
-          $ref: '#/definitions/pamagi_domain_dto.ExampleRequest'
+          $ref: '#/definitions/dto.ExampleRequest'
         type: array
       part_of_speech:
         type: string
@@ -63,7 +63,7 @@ definitions:
     - russian_word
     - translation
     type: object
-  pamagi_domain_dto.ExampleRequest:
+  dto.ExampleRequest:
     properties:
       russian_sentence:
         type: string
@@ -73,7 +73,35 @@ definitions:
     - russian_sentence
     - translated_sentence
     type: object
-  pamagi_domain_dto.LoginRequest:
+  dto.GenerateFlashcardRequest:
+    properties:
+      category_id:
+        description: Parameter opsional (tergantung FilterType)
+        type: string
+      end_date:
+        type: string
+      filter_type:
+        description: 'Opsi: "category", "part_of_speech", "favorite", "date_range",
+          "manual", "all"'
+        type: string
+      part_of_speech:
+        type: string
+      sort_by:
+        description: 'Opsi: "name_asc", "name_desc", "created_asc", "created_desc",
+          "updated_desc"'
+        type: string
+      start_date:
+        description: 'Format: YYYY-MM-DD'
+        type: string
+      word_ids:
+        description: Jika pilih manual satu per satu
+        items:
+          type: string
+        type: array
+    required:
+    - filter_type
+    type: object
+  dto.LoginRequest:
     properties:
       identifier:
         description: Ubah Email menjadi Identifier (bisa menampung email atau username)
@@ -84,7 +112,38 @@ definitions:
     - identifier
     - password
     type: object
-  pamagi_domain_dto.RegisterRequest:
+  dto.QuizDetailResponse:
+    properties:
+      is_correct:
+        type: boolean
+      russian_word:
+        type: string
+      translation:
+        type: string
+      word_id:
+        type: string
+    type: object
+  dto.QuizSessionResponse:
+    properties:
+      correct_answers:
+        type: integer
+      created_at:
+        type: string
+      details:
+        description: omitempty agar null untuk user Free
+        items:
+          $ref: '#/definitions/dto.QuizDetailResponse'
+        type: array
+      id:
+        type: string
+      incorrect_answers:
+        type: integer
+      score:
+        type: number
+      total_words:
+        type: integer
+    type: object
+  dto.RegisterRequest:
     properties:
       email:
         type: string
@@ -105,7 +164,40 @@ definitions:
     - password
     - username
     type: object
-  pamagi_domain_dto.UserResponse:
+  dto.SubmitQuizDetail:
+    properties:
+      is_correct:
+        type: boolean
+      word_id:
+        type: string
+    required:
+    - word_id
+    type: object
+  dto.SubmitQuizRequest:
+    properties:
+      correct_answers:
+        type: integer
+      details:
+        items:
+          $ref: '#/definitions/dto.SubmitQuizDetail'
+        type: array
+      incorrect_answers:
+        type: integer
+      score:
+        type: number
+      status:
+        description: Tambahkan ini
+        enum:
+        - IN_PROGRESS
+        - COMPLETED
+        type: string
+      total_words:
+        type: integer
+    required:
+    - status
+    - total_words
+    type: object
+  dto.UserResponse:
     properties:
       email:
         type: string
@@ -116,7 +208,7 @@ definitions:
       username:
         type: string
     type: object
-  pamagi_domain_dto.WordExampleRes:
+  dto.WordExampleRes:
     properties:
       id:
         type: string
@@ -125,17 +217,17 @@ definitions:
       translated_sentence:
         type: string
     type: object
-  pamagi_domain_dto.WordResponse:
+  dto.WordResponse:
     properties:
       categories:
         items:
-          $ref: '#/definitions/pamagi_domain_dto.CategoryRes'
+          $ref: '#/definitions/dto.CategoryRes'
         type: array
       created_at:
         type: string
       examples:
         items:
-          $ref: '#/definitions/pamagi_domain_dto.WordExampleRes'
+          $ref: '#/definitions/dto.WordExampleRes'
         type: array
       id:
         type: string
@@ -165,7 +257,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/pamagi_domain_dto.CategoryResponse'
+              $ref: '#/definitions/dto.CategoryResponse'
             type: array
       security:
       - ApiKeyAuth: []
@@ -182,14 +274,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/pamagi_domain_dto.CreateCategoryRequest'
+          $ref: '#/definitions/dto.CreateCategoryRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/pamagi_domain_dto.CategoryResponse'
+            $ref: '#/definitions/dto.CategoryResponse'
         "400":
           description: Bad Request
           schema:
@@ -199,6 +291,104 @@ paths:
       summary: Tambah Kategori Baru
       tags:
       - Categories
+  /flashcards/generate:
+    post:
+      consumes:
+      - application/json
+      description: Mengambil daftar kata berdasarkan filter (maksimal 20 untuk Free,
+        diacak jika lebih)
+      parameters:
+      - description: Filter Flashcard
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GenerateFlashcardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.WordResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Dapatkan Soal Flashcard
+      tags:
+      - Flashcard
+  /flashcards/history:
+    get:
+      description: Menampilkan riwayat kuis user (Detail jawaban hanya muncul jika
+        Premium)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.QuizSessionResponse'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Ambil Histori Kuis
+      tags:
+      - Flashcard
+  /flashcards/history/{id}:
+    delete:
+      description: Menghapus satu riwayat kuis berdasarkan ID sesi
+      parameters:
+      - description: ID Session
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Hapus Histori Kuis
+      tags:
+      - Flashcard
+  /flashcards/submit:
+    post:
+      consumes:
+      - application/json
+      description: Menyimpan skor akhir dan detail jawaban user setelah kuis selesai
+      parameters:
+      - description: Data Skor Kuis
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SubmitQuizRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Kirim Hasil Kuis
+      tags:
+      - Flashcard
   /login:
     post:
       consumes:
@@ -210,14 +400,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/pamagi_domain_dto.LoginRequest'
+          $ref: '#/definitions/dto.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/pamagi_domain_dto.AuthResponse'
+            $ref: '#/definitions/dto.AuthResponse'
         "400":
           description: Bad Request
           schema:
@@ -263,7 +453,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/pamagi_domain_dto.RegisterRequest'
+          $ref: '#/definitions/dto.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -309,7 +499,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/pamagi_domain_dto.WordResponse'
+              $ref: '#/definitions/dto.WordResponse'
             type: array
       security:
       - ApiKeyAuth: []
@@ -326,7 +516,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/pamagi_domain_dto.CreateWordRequest'
+          $ref: '#/definitions/dto.CreateWordRequest'
       produces:
       - application/json
       responses:
