@@ -2,7 +2,6 @@ package entity
 
 import "time"
 
-// Ganti nama dari QuizSession menjadi QuizHistory
 type QuizHistory struct {
 	ID               string `gorm:"type:varchar(36);primaryKey"`
 	UserID           string `gorm:"type:varchar(36);not null"`

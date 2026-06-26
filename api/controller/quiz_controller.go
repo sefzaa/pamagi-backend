@@ -76,7 +76,7 @@ func (qc *QuizController) SubmitQuiz(c *gin.Context) {
 // @Tags Flashcard
 // @Security ApiKeyAuth
 // @Produce json
-// @Success 200 {array} dto.QuizSessionResponse
+// @Success 200 {array} dto.QuizHistoryResponse
 // @Router /flashcards/history [get]
 func (qc *QuizController) GetHistories(c *gin.Context) {
 	userID := c.GetString("x-user-id")

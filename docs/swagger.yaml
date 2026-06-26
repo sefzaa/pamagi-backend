@@ -123,7 +123,7 @@ definitions:
       word_id:
         type: string
     type: object
-  pamagi_domain_dto.QuizSessionResponse:
+  pamagi_domain_dto.QuizHistoryResponse:
     properties:
       correct_answers:
         type: integer
@@ -333,7 +333,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/pamagi_domain_dto.QuizSessionResponse'
+              $ref: '#/definitions/pamagi_domain_dto.QuizHistoryResponse'
             type: array
       security:
       - ApiKeyAuth: []

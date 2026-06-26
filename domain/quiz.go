@@ -11,7 +11,7 @@ type QuizRepository interface {
 	GenerateQuestions(c context.Context, userID string, filter *dto.GenerateFlashcardRequest, limit int) ([]entity.Word, error)
 	
 	// Untuk menyimpan histori kuis
-	SaveQuizSession(c context.Context, session *entity.QuizHistory) error
+	SaveQuizHistory(c context.Context, session *entity.QuizHistory) error
 	
 	// Untuk fitur Premium
 	GetHistories(c context.Context, userID string) ([]entity.QuizHistory, error)
@@ -23,6 +23,6 @@ type QuizUsecase interface {
 	GenerateFlashcards(c context.Context, userID string, req *dto.GenerateFlashcardRequest) ([]dto.WordResponse, error)
 	SubmitQuiz(c context.Context, userID string, req *dto.SubmitQuizRequest) error
 	
-	GetQuizHistories(c context.Context, userID string) ([]dto.QuizSessionResponse, error)
+	GetQuizHistories(c context.Context, userID string) ([]dto.QuizHistoryResponse, error)
 	DeleteQuizHistory(c context.Context, sessionID string, userID string) error
 }

@@ -155,7 +155,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/pamagi_domain_dto.QuizSessionResponse"
+                                "$ref": "#/definitions/pamagi_domain_dto.QuizHistoryResponse"
                             }
                         }
                     }
@@ -684,7 +684,7 @@ const docTemplate = `{
                 }
             }
         },
-        "pamagi_domain_dto.QuizSessionResponse": {
+        "pamagi_domain_dto.QuizHistoryResponse": {
             "type": "object",
             "properties": {
                 "correct_answers": {

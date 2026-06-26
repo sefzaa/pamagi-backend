@@ -66,7 +66,7 @@ func (u *quizUsecase) SubmitQuiz(c context.Context, userID string, req *dto.Subm
 	for _, d := range req.Details {
 		details = append(details, entity.QuizDetail{
 			ID:            uuid.New().String(),
-			QuizSessionID: sessionID,
+			QuizHistoryID: sessionID,
 			WordID:        d.WordID,
 			IsCorrect:     d.IsCorrect,
 		})
@@ -84,10 +84,10 @@ func (u *quizUsecase) SubmitQuiz(c context.Context, userID string, req *dto.Subm
 		CreatedAt:        time.Now(),
 	}
 
-	return u.quizRepo.SaveQuizSession(c, session)
+	return u.quizRepo.SaveQuizHistory(c, session)
 }
 
-func (u *quizUsecase) GetQuizHistories(c context.Context, userID string) ([]dto.QuizSessionResponse, error) {
+func (u *quizUsecase) GetQuizHistories(c context.Context, userID string) ([]dto.QuizHistoryResponse, error) {
 	sessions, err := u.quizRepo.GetHistories(c, userID)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (u *quizUsecase) GetQuizHistories(c context.Context, userID string) ([]dto.
 	// TODO: Cek status Premium user
 	isPremium := false 
 
-	var responses []dto.QuizSessionResponse
+	var responses []dto.QuizHistoryResponse
 	for _, s := range sessions {
 		var detailRes []dto.QuizDetailResponse
 		
@@ -112,9 +112,9 @@ func (u *quizUsecase) GetQuizHistories(c context.Context, userID string) ([]dto.
 			}
 		}
 
-		responses = append(responses, dto.QuizSessionResponse{
+		responses = append(responses, dto.QuizHistoryResponse{
 			ID:               s.ID,
-			TotalWords:       s.TotalWords,
+			TotalWords:       s.TotalQuestions,
 			CorrectAnswers:   s.CorrectAnswers,
 			IncorrectAnswers: s.IncorrectAnswers,
 			Score:            s.Score,
@@ -124,7 +124,7 @@ func (u *quizUsecase) GetQuizHistories(c context.Context, userID string) ([]dto.
 	}
 
 	if responses == nil {
-		responses = []dto.QuizSessionResponse{}
+		responses = []dto.QuizHistoryResponse{}
 	}
 	return responses, nil
 }

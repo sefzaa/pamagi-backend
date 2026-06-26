@@ -70,7 +70,7 @@ func (r *quizRepository) GenerateQuestions(c context.Context, userID string, fil
 }
 
 
-func (r *quizRepository) SaveQuizSession(c context.Context, session *entity.QuizHistory) error {
+func (r *quizRepository) SaveQuizHistory(c context.Context, session *entity.QuizHistory) error {
 	return r.db.WithContext(c).Create(session).Error
 }
 

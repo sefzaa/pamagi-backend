@@ -30,7 +30,7 @@ type SubmitQuizDetail struct {
 }
 
 // 3. Response untuk histori kuis
-type QuizSessionResponse struct {
+type QuizHistoryResponse struct {
 	ID               string             `json:"id"`
 	TotalWords       int                `json:"total_words"`
 	CorrectAnswers   int                `json:"correct_answers"`
