@@ -1,4 +1,4 @@
-TEST
+TEST1
 
 // @host pamagi.mydm.cloud
 // @BasePath /
