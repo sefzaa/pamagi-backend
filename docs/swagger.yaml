@@ -148,7 +148,7 @@ definitions:
       translation:
         type: string
     type: object
-host: localhost:8080
+host: pamagi.mydm.cloud
 info:
   contact: {}
   description: Ini adalah dokumentasi API untuk backend Pamagi.
