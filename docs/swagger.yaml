@@ -10,37 +10,37 @@ definitions:
       message:
         type: string
     type: object
-  dto.AuthResponse:
+  pamagi_domain_dto.AuthResponse:
     properties:
       access_token:
         type: string
       refresh_token:
         type: string
       user:
-        $ref: '#/definitions/dto.UserResponse'
+        $ref: '#/definitions/pamagi_domain_dto.UserResponse'
     type: object
-  dto.CategoryRes:
+  pamagi_domain_dto.CategoryRes:
     properties:
       id:
         type: string
       name:
         type: string
     type: object
-  dto.CategoryResponse:
+  pamagi_domain_dto.CategoryResponse:
     properties:
       id:
         type: string
       name:
         type: string
     type: object
-  dto.CreateCategoryRequest:
+  pamagi_domain_dto.CreateCategoryRequest:
     properties:
       name:
         type: string
     required:
     - name
     type: object
-  dto.CreateWordRequest:
+  pamagi_domain_dto.CreateWordRequest:
     properties:
       category_ids:
         description: Array ID kategori (Opsional)
@@ -50,7 +50,7 @@ definitions:
       examples:
         description: Array contoh kalimat (Opsional)
         items:
-          $ref: '#/definitions/dto.ExampleRequest'
+          $ref: '#/definitions/pamagi_domain_dto.ExampleRequest'
         type: array
       part_of_speech:
         type: string
@@ -63,7 +63,7 @@ definitions:
     - russian_word
     - translation
     type: object
-  dto.ExampleRequest:
+  pamagi_domain_dto.ExampleRequest:
     properties:
       russian_sentence:
         type: string
@@ -73,7 +73,7 @@ definitions:
     - russian_sentence
     - translated_sentence
     type: object
-  dto.GenerateFlashcardRequest:
+  pamagi_domain_dto.GenerateFlashcardRequest:
     properties:
       category_id:
         description: Parameter opsional (tergantung FilterType)
@@ -101,7 +101,7 @@ definitions:
     required:
     - filter_type
     type: object
-  dto.LoginRequest:
+  pamagi_domain_dto.LoginRequest:
     properties:
       identifier:
         description: Ubah Email menjadi Identifier (bisa menampung email atau username)
@@ -112,7 +112,7 @@ definitions:
     - identifier
     - password
     type: object
-  dto.QuizDetailResponse:
+  pamagi_domain_dto.QuizDetailResponse:
     properties:
       is_correct:
         type: boolean
@@ -123,7 +123,7 @@ definitions:
       word_id:
         type: string
     type: object
-  dto.QuizSessionResponse:
+  pamagi_domain_dto.QuizSessionResponse:
     properties:
       correct_answers:
         type: integer
@@ -132,7 +132,7 @@ definitions:
       details:
         description: omitempty agar null untuk user Free
         items:
-          $ref: '#/definitions/dto.QuizDetailResponse'
+          $ref: '#/definitions/pamagi_domain_dto.QuizDetailResponse'
         type: array
       id:
         type: string
@@ -143,7 +143,7 @@ definitions:
       total_words:
         type: integer
     type: object
-  dto.RegisterRequest:
+  pamagi_domain_dto.RegisterRequest:
     properties:
       email:
         type: string
@@ -164,7 +164,7 @@ definitions:
     - password
     - username
     type: object
-  dto.SubmitQuizDetail:
+  pamagi_domain_dto.SubmitQuizDetail:
     properties:
       is_correct:
         type: boolean
@@ -173,13 +173,13 @@ definitions:
     required:
     - word_id
     type: object
-  dto.SubmitQuizRequest:
+  pamagi_domain_dto.SubmitQuizRequest:
     properties:
       correct_answers:
         type: integer
       details:
         items:
-          $ref: '#/definitions/dto.SubmitQuizDetail'
+          $ref: '#/definitions/pamagi_domain_dto.SubmitQuizDetail'
         type: array
       incorrect_answers:
         type: integer
@@ -197,7 +197,7 @@ definitions:
     - status
     - total_words
     type: object
-  dto.UserResponse:
+  pamagi_domain_dto.UserResponse:
     properties:
       email:
         type: string
@@ -208,7 +208,7 @@ definitions:
       username:
         type: string
     type: object
-  dto.WordExampleRes:
+  pamagi_domain_dto.WordExampleRes:
     properties:
       id:
         type: string
@@ -217,17 +217,17 @@ definitions:
       translated_sentence:
         type: string
     type: object
-  dto.WordResponse:
+  pamagi_domain_dto.WordResponse:
     properties:
       categories:
         items:
-          $ref: '#/definitions/dto.CategoryRes'
+          $ref: '#/definitions/pamagi_domain_dto.CategoryRes'
         type: array
       created_at:
         type: string
       examples:
         items:
-          $ref: '#/definitions/dto.WordExampleRes'
+          $ref: '#/definitions/pamagi_domain_dto.WordExampleRes'
         type: array
       id:
         type: string
@@ -257,7 +257,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.CategoryResponse'
+              $ref: '#/definitions/pamagi_domain_dto.CategoryResponse'
             type: array
       security:
       - ApiKeyAuth: []
@@ -274,14 +274,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateCategoryRequest'
+          $ref: '#/definitions/pamagi_domain_dto.CreateCategoryRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.CategoryResponse'
+            $ref: '#/definitions/pamagi_domain_dto.CategoryResponse'
         "400":
           description: Bad Request
           schema:
@@ -303,7 +303,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.GenerateFlashcardRequest'
+          $ref: '#/definitions/pamagi_domain_dto.GenerateFlashcardRequest'
       produces:
       - application/json
       responses:
@@ -311,7 +311,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.WordResponse'
+              $ref: '#/definitions/pamagi_domain_dto.WordResponse'
             type: array
         "400":
           description: Bad Request
@@ -333,7 +333,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.QuizSessionResponse'
+              $ref: '#/definitions/pamagi_domain_dto.QuizSessionResponse'
             type: array
       security:
       - ApiKeyAuth: []
@@ -372,7 +372,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.SubmitQuizRequest'
+          $ref: '#/definitions/pamagi_domain_dto.SubmitQuizRequest'
       produces:
       - application/json
       responses:
@@ -400,14 +400,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.LoginRequest'
+          $ref: '#/definitions/pamagi_domain_dto.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.AuthResponse'
+            $ref: '#/definitions/pamagi_domain_dto.AuthResponse'
         "400":
           description: Bad Request
           schema:
@@ -453,7 +453,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.RegisterRequest'
+          $ref: '#/definitions/pamagi_domain_dto.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -499,7 +499,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.WordResponse'
+              $ref: '#/definitions/pamagi_domain_dto.WordResponse'
             type: array
       security:
       - ApiKeyAuth: []
@@ -516,7 +516,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateWordRequest'
+          $ref: '#/definitions/pamagi_domain_dto.CreateWordRequest'
       produces:
       - application/json
       responses:
