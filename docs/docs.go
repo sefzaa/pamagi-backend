@@ -36,7 +36,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.CategoryResponse"
+                                "$ref": "#/definitions/pamagi_domain_dto.CategoryResponse"
                             }
                         }
                     }
@@ -66,7 +66,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateCategoryRequest"
+                            "$ref": "#/definitions/pamagi_domain_dto.CreateCategoryRequest"
                         }
                     }
                 ],
@@ -74,7 +74,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.CategoryResponse"
+                            "$ref": "#/definitions/pamagi_domain_dto.CategoryResponse"
                         }
                     },
                     "400": {
@@ -106,7 +106,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.LoginRequest"
+                            "$ref": "#/definitions/pamagi_domain_dto.LoginRequest"
                         }
                     }
                 ],
@@ -114,7 +114,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.AuthResponse"
+                            "$ref": "#/definitions/pamagi_domain_dto.AuthResponse"
                         }
                     },
                     "400": {
@@ -189,7 +189,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.RegisterRequest"
+                            "$ref": "#/definitions/pamagi_domain_dto.RegisterRequest"
                         }
                     }
                 ],
@@ -262,7 +262,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.WordResponse"
+                                "$ref": "#/definitions/pamagi_domain_dto.WordResponse"
                             }
                         }
                     }
@@ -292,7 +292,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateWordRequest"
+                            "$ref": "#/definitions/pamagi_domain_dto.CreateWordRequest"
                         }
                     }
                 ],
@@ -364,7 +364,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.AuthResponse": {
+        "pamagi_domain_dto.AuthResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -374,11 +374,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user": {
-                    "$ref": "#/definitions/dto.UserResponse"
+                    "$ref": "#/definitions/pamagi_domain_dto.UserResponse"
                 }
             }
         },
-        "dto.CategoryRes": {
+        "pamagi_domain_dto.CategoryRes": {
             "type": "object",
             "properties": {
                 "id": {
@@ -389,7 +389,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CategoryResponse": {
+        "pamagi_domain_dto.CategoryResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -400,7 +400,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateCategoryRequest": {
+        "pamagi_domain_dto.CreateCategoryRequest": {
             "type": "object",
             "required": [
                 "name"
@@ -411,7 +411,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateWordRequest": {
+        "pamagi_domain_dto.CreateWordRequest": {
             "type": "object",
             "required": [
                 "part_of_speech",
@@ -430,7 +430,7 @@ const docTemplate = `{
                     "description": "Array contoh kalimat (Opsional)",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.ExampleRequest"
+                        "$ref": "#/definitions/pamagi_domain_dto.ExampleRequest"
                     }
                 },
                 "part_of_speech": {
@@ -444,7 +444,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ExampleRequest": {
+        "pamagi_domain_dto.ExampleRequest": {
             "type": "object",
             "required": [
                 "russian_sentence",
@@ -459,7 +459,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.LoginRequest": {
+        "pamagi_domain_dto.LoginRequest": {
             "type": "object",
             "required": [
                 "identifier",
@@ -475,7 +475,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.RegisterRequest": {
+        "pamagi_domain_dto.RegisterRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -505,7 +505,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UserResponse": {
+        "pamagi_domain_dto.UserResponse": {
             "type": "object",
             "properties": {
                 "email": {
@@ -522,7 +522,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.WordExampleRes": {
+        "pamagi_domain_dto.WordExampleRes": {
             "type": "object",
             "properties": {
                 "id": {
@@ -536,13 +536,13 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.WordResponse": {
+        "pamagi_domain_dto.WordResponse": {
             "type": "object",
             "properties": {
                 "categories": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.CategoryRes"
+                        "$ref": "#/definitions/pamagi_domain_dto.CategoryRes"
                     }
                 },
                 "created_at": {
@@ -551,7 +551,7 @@ const docTemplate = `{
                 "examples": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.WordExampleRes"
+                        "$ref": "#/definitions/pamagi_domain_dto.WordExampleRes"
                     }
                 },
                 "id": {
