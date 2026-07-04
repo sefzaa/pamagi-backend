@@ -35,20 +35,36 @@ func (u *categoryUsecase) CreateCategory(c context.Context, userID string, req *
 		Icon: category.Icon}, nil
 }
 
-func (u *categoryUsecase) GetCategories(c context.Context, userID string) ([]dto.CategoryResponse, error) {
+// Ubah fungsi GetCategories
+func (u *categoryUsecase) GetCategories(c context.Context, userID string, forDropdown bool) ([]dto.CategoryResponse, error) {
 	categories, err := u.categoryRepo.FetchByUserID(c, userID)
 	if err != nil {
 		return nil, err
 	}
+
 	var responses []dto.CategoryResponse
 	for _, cat := range categories {
 		responses = append(responses, dto.CategoryResponse{
-			ID: cat.ID, 
-			Name: cat.Name, 
-			Icon: cat.Icon,
-			Count: cat.Count,
+			ID:    cat.ID,
+			Name:  cat.Name,
+			Icon:  cat.Icon,
+			Count: cat.Count, 
 		})
 	}
-	if responses == nil { responses = []dto.CategoryResponse{} }
+
+	// JIKA BUKAN UNTUK DROPDOWN, TAMBAHKAN UNCATEGORIZED
+	if !forDropdown {
+		uncategorizedCount, _ := u.categoryRepo.CountUncategorized(c, userID)
+		responses = append(responses, dto.CategoryResponse{
+			ID:    "uncategorized", // ID unik untuk FE
+			Name:  "Uncategorized",
+			Icon:  "folder_off",    // Icon default untuk uncategorized
+			Count: uncategorizedCount,
+		})
+	}
+
+	if responses == nil {
+		responses = []dto.CategoryResponse{}
+	}
 	return responses, nil
 }

@@ -22,7 +22,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Menampilkan semua daftar kategori milik user yang sedang login",
+                "description": "Menampilkan semua daftar kategori.",
                 "produces": [
                     "application/json"
                 ],
@@ -30,6 +30,14 @@ const docTemplate = `{
                     "Categories"
                 ],
                 "summary": "Ambil Daftar Kategori",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Set true untuk menyembunyikan Uncategorized (digunakan saat input kata)",
+                        "name": "for_dropdown",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

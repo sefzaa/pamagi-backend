@@ -32,3 +32,14 @@ func (r *categoryRepository) FetchByUserID(c context.Context, userID string) ([]
 		
 	return categories, err
 }
+
+// Tambahkan di bagian bawah file category_repository.go
+func (r *categoryRepository) CountUncategorized(c context.Context, userID string) (int64, error) {
+	var count int64
+	// Hitung kata (words) yang TIDAK ADA di tabel word_categories (NULL)
+	err := r.db.WithContext(c).Table("words").
+		Joins("LEFT JOIN word_categories wc ON words.id = wc.word_id").
+		Where("words.user_id = ? AND wc.word_id IS NULL AND words.deleted_at IS NULL", userID).
+		Count(&count).Error
+	return count, err
+}

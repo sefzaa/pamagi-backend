@@ -364,7 +364,13 @@ info:
 paths:
   /categories:
     get:
-      description: Menampilkan semua daftar kategori milik user yang sedang login
+      description: Menampilkan semua daftar kategori.
+      parameters:
+      - description: Set true untuk menyembunyikan Uncategorized (digunakan saat input
+          kata)
+        in: query
+        name: for_dropdown
+        type: boolean
       produces:
       - application/json
       responses:

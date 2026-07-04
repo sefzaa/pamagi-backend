@@ -43,16 +43,20 @@ func (cc *CategoryController) CreateCategory(c *gin.Context) {
 
 // GetCategories godoc
 // @Summary Ambil Daftar Kategori
-// @Description Menampilkan semua daftar kategori milik user yang sedang login
+// @Description Menampilkan semua daftar kategori.
 // @Tags Categories
 // @Security ApiKeyAuth
 // @Produce json
+// @Param for_dropdown query boolean false "Set true untuk menyembunyikan Uncategorized (digunakan saat input kata)"
 // @Success 200 {array} dto.CategoryResponse
 // @Router /categories [get]
 func (cc *CategoryController) GetCategories(c *gin.Context) {
 	userID := c.GetString("x-user-id")
+	
+	// Cek apakah FE mengirim ?for_dropdown=true
+	forDropdown := c.Query("for_dropdown") == "true"
 
-	responses, err := cc.CategoryUsecase.GetCategories(c.Request.Context(), userID)
+	responses, err := cc.CategoryUsecase.GetCategories(c.Request.Context(), userID, forDropdown)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: err.Error()})
 		return
