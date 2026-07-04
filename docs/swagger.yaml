@@ -10,37 +10,45 @@ definitions:
       message:
         type: string
     type: object
-  pamagi_domain_dto.AuthResponse:
+  dto.AuthResponse:
     properties:
       access_token:
         type: string
       refresh_token:
         type: string
       user:
-        $ref: '#/definitions/pamagi_domain_dto.UserResponse'
+        $ref: '#/definitions/dto.UserResponse'
     type: object
-  pamagi_domain_dto.CategoryRes:
+  dto.CategoryRes:
     properties:
+      icon:
+        type: string
       id:
         type: string
       name:
         type: string
     type: object
-  pamagi_domain_dto.CategoryResponse:
+  dto.CategoryResponse:
     properties:
+      icon:
+        type: string
       id:
         type: string
       name:
         type: string
     type: object
-  pamagi_domain_dto.CreateCategoryRequest:
+  dto.CreateCategoryRequest:
     properties:
+      icon:
+        description: Menangkap nama icon dari FE
+        type: string
       name:
         type: string
     required:
+    - icon
     - name
     type: object
-  pamagi_domain_dto.CreateWordRequest:
+  dto.CreateWordRequest:
     properties:
       category_ids:
         description: Array ID kategori (Opsional)
@@ -50,7 +58,7 @@ definitions:
       examples:
         description: Array contoh kalimat (Opsional)
         items:
-          $ref: '#/definitions/pamagi_domain_dto.ExampleRequest'
+          $ref: '#/definitions/dto.ExampleRequest'
         type: array
       part_of_speech:
         type: string
@@ -63,7 +71,7 @@ definitions:
     - russian_word
     - translation
     type: object
-  pamagi_domain_dto.ExampleRequest:
+  dto.ExampleRequest:
     properties:
       russian_sentence:
         type: string
@@ -73,19 +81,23 @@ definitions:
     - russian_sentence
     - translated_sentence
     type: object
-  pamagi_domain_dto.GenerateFlashcardRequest:
+  dto.GenerateFlashcardRequest:
     properties:
-      category_id:
+      category_ids:
         description: Parameter opsional (tergantung FilterType)
-        type: string
+        items:
+          type: string
+        type: array
       end_date:
         type: string
       filter_type:
         description: 'Opsi: "category", "part_of_speech", "favorite", "date_range",
           "manual", "all"'
         type: string
-      part_of_speech:
-        type: string
+      parts_of_speech:
+        items:
+          type: string
+        type: array
       sort_by:
         description: 'Opsi: "name_asc", "name_desc", "created_asc", "created_desc",
           "updated_desc"'
@@ -101,7 +113,7 @@ definitions:
     required:
     - filter_type
     type: object
-  pamagi_domain_dto.LoginRequest:
+  dto.LoginRequest:
     properties:
       identifier:
         description: Ubah Email menjadi Identifier (bisa menampung email atau username)
@@ -112,7 +124,7 @@ definitions:
     - identifier
     - password
     type: object
-  pamagi_domain_dto.QuizDetailResponse:
+  dto.QuizDetailResponse:
     properties:
       is_correct:
         type: boolean
@@ -123,7 +135,7 @@ definitions:
       word_id:
         type: string
     type: object
-  pamagi_domain_dto.QuizHistoryResponse:
+  dto.QuizHistoryResponse:
     properties:
       correct_answers:
         type: integer
@@ -132,7 +144,7 @@ definitions:
       details:
         description: omitempty agar null untuk user Free
         items:
-          $ref: '#/definitions/pamagi_domain_dto.QuizDetailResponse'
+          $ref: '#/definitions/dto.QuizDetailResponse'
         type: array
       id:
         type: string
@@ -143,7 +155,7 @@ definitions:
       total_words:
         type: integer
     type: object
-  pamagi_domain_dto.RegisterRequest:
+  dto.RegisterRequest:
     properties:
       email:
         type: string
@@ -164,7 +176,7 @@ definitions:
     - password
     - username
     type: object
-  pamagi_domain_dto.SubmitQuizDetail:
+  dto.SubmitQuizDetail:
     properties:
       is_correct:
         type: boolean
@@ -173,14 +185,16 @@ definitions:
     required:
     - word_id
     type: object
-  pamagi_domain_dto.SubmitQuizRequest:
+  dto.SubmitQuizRequest:
     properties:
       correct_answers:
         type: integer
       details:
         items:
-          $ref: '#/definitions/pamagi_domain_dto.SubmitQuizDetail'
+          $ref: '#/definitions/dto.SubmitQuizDetail'
         type: array
+      id:
+        type: string
       incorrect_answers:
         type: integer
       score:
@@ -197,7 +211,7 @@ definitions:
     - status
     - total_words
     type: object
-  pamagi_domain_dto.UserResponse:
+  dto.UserResponse:
     properties:
       email:
         type: string
@@ -208,7 +222,7 @@ definitions:
       username:
         type: string
     type: object
-  pamagi_domain_dto.WordExampleRes:
+  dto.WordExampleRes:
     properties:
       id:
         type: string
@@ -217,20 +231,22 @@ definitions:
       translated_sentence:
         type: string
     type: object
-  pamagi_domain_dto.WordResponse:
+  dto.WordResponse:
     properties:
       categories:
         items:
-          $ref: '#/definitions/pamagi_domain_dto.CategoryRes'
+          $ref: '#/definitions/dto.CategoryRes'
         type: array
       created_at:
         type: string
       examples:
         items:
-          $ref: '#/definitions/pamagi_domain_dto.WordExampleRes'
+          $ref: '#/definitions/dto.WordExampleRes'
         type: array
       id:
         type: string
+      is_bookmarked:
+        type: boolean
       is_favorite:
         type: boolean
       part_of_speech:
@@ -240,7 +256,7 @@ definitions:
       translation:
         type: string
     type: object
-host: pamagi.mydm.cloud
+host: localhost:8080
 info:
   contact: {}
   description: Ini adalah dokumentasi API untuk backend Pamagi.
@@ -257,7 +273,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/pamagi_domain_dto.CategoryResponse'
+              $ref: '#/definitions/dto.CategoryResponse'
             type: array
       security:
       - ApiKeyAuth: []
@@ -274,14 +290,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/pamagi_domain_dto.CreateCategoryRequest'
+          $ref: '#/definitions/dto.CreateCategoryRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/pamagi_domain_dto.CategoryResponse'
+            $ref: '#/definitions/dto.CategoryResponse'
         "400":
           description: Bad Request
           schema:
@@ -303,7 +319,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/pamagi_domain_dto.GenerateFlashcardRequest'
+          $ref: '#/definitions/dto.GenerateFlashcardRequest'
       produces:
       - application/json
       responses:
@@ -311,7 +327,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/pamagi_domain_dto.WordResponse'
+              $ref: '#/definitions/dto.WordResponse'
             type: array
         "400":
           description: Bad Request
@@ -333,7 +349,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/pamagi_domain_dto.QuizHistoryResponse'
+              $ref: '#/definitions/dto.QuizHistoryResponse'
             type: array
       security:
       - ApiKeyAuth: []
@@ -372,7 +388,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/pamagi_domain_dto.SubmitQuizRequest'
+          $ref: '#/definitions/dto.SubmitQuizRequest'
       produces:
       - application/json
       responses:
@@ -400,14 +416,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/pamagi_domain_dto.LoginRequest'
+          $ref: '#/definitions/dto.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/pamagi_domain_dto.AuthResponse'
+            $ref: '#/definitions/dto.AuthResponse'
         "400":
           description: Bad Request
           schema:
@@ -453,7 +469,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/pamagi_domain_dto.RegisterRequest'
+          $ref: '#/definitions/dto.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -474,7 +490,7 @@ paths:
       - Auth
   /words:
     get:
-      description: Menampilkan daftar kosakata dengan fitur filter
+      description: Menampilkan daftar kosakata dengan fitur filter kombo (limit 20)
       parameters:
       - description: Filter by Category ID
         in: query
@@ -488,10 +504,30 @@ paths:
         in: query
         name: is_favorite
         type: boolean
-      - description: Sorting (newest, oldest)
+      - description: Filter by Bookmark status
+        in: query
+        name: is_bookmarked
+        type: boolean
+      - description: Filter by Start Date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: Filter by End Date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      - description: Sorting (newest, oldest, a_z, z_a)
         in: query
         name: sort_by
         type: string
+      - description: 'Nomor Halaman (Default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Jumlah Data per Halaman (Default: 20)'
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -499,7 +535,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/pamagi_domain_dto.WordResponse'
+              $ref: '#/definitions/dto.WordResponse'
             type: array
       security:
       - ApiKeyAuth: []
@@ -516,7 +552,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/pamagi_domain_dto.CreateWordRequest'
+          $ref: '#/definitions/dto.CreateWordRequest'
       produces:
       - application/json
       responses:
@@ -531,6 +567,78 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Tambah Kosakata Baru
+      tags:
+      - Words
+  /words/{id}:
+    delete:
+      description: Menghapus satu kosakata beserta relasi kategori dan contoh kalimatnya
+        secara permanen
+      parameters:
+      - description: ID Kosakata
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Hapus Kosakata
+      tags:
+      - Words
+    get:
+      description: Mengambil satu data kosakata beserta relasi kategori dan contoh
+        kalimatnya
+      parameters:
+      - description: ID Kosakata
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.WordResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Ambil Detail Kosakata
+      tags:
+      - Words
+  /words/{id}/bookmark:
+    put:
+      description: Menandai atau menghapus tanda bookmark pada suatu kata
+      parameters:
+      - description: ID Kosakata
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Ubah Status Bookmark
       tags:
       - Words
   /words/{id}/favorite:

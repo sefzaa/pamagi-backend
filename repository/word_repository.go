@@ -18,14 +18,10 @@ func NewWordRepository(db *gorm.DB) domain.WordRepository {
 }
 
 func (r *wordRepository) Create(c context.Context, word *entity.Word, categoryIDs []string) error {
-	// Gunakan Transaction agar aman (kalau insert category gagal, insert word juga dibatalkan)
 	return r.db.WithContext(c).Transaction(func(tx *gorm.DB) error {
-		// 1. Insert Word beserta Examples-nya (GORM otomatis handle relasi bersarang ini)
 		if err := tx.Create(word).Error; err != nil {
 			return err
 		}
-
-		// 2. Jika ada Kategori yang dipilih, hubungkan ke tabel word_categories
 		if len(categoryIDs) > 0 {
 			var categories []entity.Category
 			tx.Where("id IN ?", categoryIDs).Find(&categories)
@@ -39,43 +35,75 @@ func (r *wordRepository) Create(c context.Context, word *entity.Word, categoryID
 
 func (r *wordRepository) Fetch(c context.Context, userID string, filter dto.WordFilterRequest) ([]entity.Word, error) {
 	var words []entity.Word
-	
-	// Mulai query dengan memanggil relasi (Preload)
 	query := r.db.WithContext(c).Preload("Categories").Preload("Examples").Where("user_id = ?", userID)
 
-	// Terapkan Filter Dinamis
 	if filter.PartOfSpeech != "" {
 		query = query.Where("part_of_speech = ?", filter.PartOfSpeech)
 	}
-	
 	if filter.IsFavorite != nil {
 		query = query.Where("is_favorite = ?", *filter.IsFavorite)
 	}
-
+	if filter.IsBookmarked != nil {
+		query = query.Where("is_bookmarked = ?", *filter.IsBookmarked)
+	}
 	if filter.CategoryID != "" {
-		// Join ke tabel pivot jika ingin mencari berdasarkan kategori
 		query = query.Joins("JOIN word_categories wc ON wc.word_id = words.id").Where("wc.category_id = ?", filter.CategoryID)
 	}
+	if filter.StartDate != "" && filter.EndDate != "" {
+		query = query.Where("DATE(words.created_at) BETWEEN ? AND ?", filter.StartDate, filter.EndDate)
+	}
 
-	// Terapkan Sorting
-	if filter.SortBy == "oldest" {
+	switch filter.SortBy {
+	case "oldest":
 		query = query.Order("words.created_at ASC")
-	} else {
+	case "a_z":
+		query = query.Order("words.russian_word ASC") // Database UTF-8 otomatis urutkan Cyrillic/Kanji
+	case "z_a":
+		query = query.Order("words.russian_word DESC")
+	default:
 		query = query.Order("words.created_at DESC") // Default: newest
 	}
 
-	err := query.Find(&words).Error
+	offset := (filter.Page - 1) * filter.Limit
+	err := query.Limit(filter.Limit).Offset(offset).Find(&words).Error
 	return words, err
 }
 
-func (r *wordRepository) ToggleFavorite(c context.Context, wordID string, userID string) error {
+func (r *wordRepository) FetchByID(c context.Context, wordID string, userID string) (entity.Word, error) {
 	var word entity.Word
-	// Pastikan user hanya bisa mengubah status favorit milik dia sendiri
-	if err := r.db.WithContext(c).Where("id = ? AND user_id = ?", wordID, userID).First(&word).Error; err != nil {
-		return err
-	}
+	err := r.db.WithContext(c).Preload("Categories").Preload("Examples").Where("id = ? AND user_id = ?", wordID, userID).First(&word).Error
+	return word, err
+}
 
-	// Balikkan nilainya (kalau true jadi false, kalau false jadi true)
-	word.IsFavorite = !word.IsFavorite
-	return r.db.WithContext(c).Save(&word).Error
+func (r *wordRepository) ToggleFavorite(c context.Context, wordID string, userID string) error {
+	return r.db.WithContext(c).Model(&entity.Word{}).Where("id = ? AND user_id = ?", wordID, userID).
+		UpdateColumn("is_favorite", gorm.Expr("NOT is_favorite")).Error
+}
+
+func (r *wordRepository) ToggleBookmark(c context.Context, wordID string, userID string) error {
+	return r.db.WithContext(c).Model(&entity.Word{}).Where("id = ? AND user_id = ?", wordID, userID).
+		UpdateColumn("is_bookmarked", gorm.Expr("NOT is_bookmarked")).Error
+}
+
+func (r *wordRepository) Delete(c context.Context, wordID string, userID string) error {
+	return r.db.WithContext(c).Transaction(func(tx *gorm.DB) error {
+		var word entity.Word
+		// Pastikan kata ada dan memang milik user yang sedang login
+		if err := tx.Where("id = ? AND user_id = ?", wordID, userID).First(&word).Error; err != nil {
+			return err
+		}
+
+		// 1. Hapus relasi di tabel pivot (word_categories)
+		if err := tx.Model(&word).Association("Categories").Clear(); err != nil {
+			return err
+		}
+
+		// 2. Hapus anak tabel (contoh kalimat)
+		if err := tx.Where("word_id = ?", wordID).Delete(&entity.WordExample{}).Error; err != nil {
+			return err
+		}
+
+		// 3. Hapus kata utamanya
+		return tx.Delete(&word).Error
+	})
 }

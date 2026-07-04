@@ -43,14 +43,19 @@ func (wc *WordController) CreateWord(c *gin.Context) {
 
 // GetWords godoc
 // @Summary Ambil Daftar Kosakata
-// @Description Menampilkan daftar kosakata dengan fitur filter
+// @Description Menampilkan daftar kosakata dengan fitur filter kombo (limit 20)
 // @Tags Words
 // @Security ApiKeyAuth
 // @Produce json
 // @Param category_id query string false "Filter by Category ID"
 // @Param part_of_speech query string false "Filter by Part of Speech (e.g., NOUN)"
 // @Param is_favorite query boolean false "Filter by Favorite status"
-// @Param sort_by query string false "Sorting (newest, oldest)"
+// @Param is_bookmarked query boolean false "Filter by Bookmark status"
+// @Param start_date query string false "Filter by Start Date (YYYY-MM-DD)"
+// @Param end_date query string false "Filter by End Date (YYYY-MM-DD)"
+// @Param sort_by query string false "Sorting (newest, oldest, a_z, z_a)"
+// @Param page query int false "Nomor Halaman (Default: 1)"
+// @Param limit query int false "Jumlah Data per Halaman (Default: 20)"
 // @Success 200 {array} dto.WordResponse
 // @Router /words [get]
 func (wc *WordController) GetWords(c *gin.Context) {
@@ -69,6 +74,29 @@ func (wc *WordController) GetWords(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, responses)
+}
+
+// GetWordDetail godoc
+// @Summary Ambil Detail Kosakata
+// @Description Mengambil satu data kosakata beserta relasi kategori dan contoh kalimatnya
+// @Tags Words
+// @Security ApiKeyAuth
+// @Produce json
+// @Param id path string true "ID Kosakata"
+// @Success 200 {object} dto.WordResponse
+// @Failure 404 {object} domain.ErrorResponse
+// @Router /words/{id} [get]
+func (wc *WordController) GetWordDetail(c *gin.Context) {
+	userID := c.GetString("x-user-id")
+	wordID := c.Param("id")
+
+	response, err := wc.WordUsecase.GetWordDetail(c.Request.Context(), wordID, userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, domain.ErrorResponse{Message: "Detail kata tidak ditemukan"})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // ToggleFavorite godoc
@@ -91,4 +119,48 @@ func (wc *WordController) ToggleFavorite(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Status favorit diperbarui"})
+}
+
+// ToggleBookmark godoc
+// @Summary Ubah Status Bookmark
+// @Description Menandai atau menghapus tanda bookmark pada suatu kata
+// @Tags Words
+// @Security ApiKeyAuth
+// @Produce json
+// @Param id path string true "ID Kosakata"
+// @Success 200 {object} domain.SuccessResponse
+// @Router /words/{id}/bookmark [put]
+func (wc *WordController) ToggleBookmark(c *gin.Context) {
+	userID := c.GetString("x-user-id")
+	wordID := c.Param("id")
+
+	err := wc.WordUsecase.ToggleBookmark(c.Request.Context(), wordID, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal merubah status bookmark"})
+		return
+	}
+
+	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Status bookmark diperbarui"})
+}
+
+// DeleteWord godoc
+// @Summary Hapus Kosakata
+// @Description Menghapus satu kosakata beserta relasi kategori dan contoh kalimatnya secara permanen
+// @Tags Words
+// @Security ApiKeyAuth
+// @Produce json
+// @Param id path string true "ID Kosakata"
+// @Success 200 {object} domain.SuccessResponse
+// @Failure 500 {object} domain.ErrorResponse
+// @Router /words/{id} [delete]
+func (wc *WordController) DeleteWord(c *gin.Context) {
+	userID := c.GetString("x-user-id")
+	wordID := c.Param("id")
+
+	if err := wc.WordUsecase.DeleteWord(c.Request.Context(), wordID, userID); err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal menghapus kosakata. Pastikan data ada."})
+		return
+	}
+
+	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Kosakata berhasil dihapus"})
 }

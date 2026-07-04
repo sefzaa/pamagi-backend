@@ -5,7 +5,6 @@ import (
 	"pamagi/domain"
 	"pamagi/domain/dto"
 	"pamagi/domain/entity"
-
 	"github.com/google/uuid"
 )
 
@@ -22,6 +21,7 @@ func (u *categoryUsecase) CreateCategory(c context.Context, userID string, req *
 		ID:     uuid.New().String(),
 		UserID: userID,
 		Name:   req.Name,
+		Icon:   req.Icon, // Simpan Icon
 	}
 
 	err := u.categoryRepo.Create(c, category)
@@ -29,11 +29,10 @@ func (u *categoryUsecase) CreateCategory(c context.Context, userID string, req *
 		return dto.CategoryResponse{}, err
 	}
 
-	// Kembalikan data yang baru dibuat agar FE tidak perlu Fetch ulang
 	return dto.CategoryResponse{
-		ID:   category.ID,
-		Name: category.Name,
-	}, nil
+		ID: category.ID, 
+		Name: category.Name, 
+		Icon: category.Icon}, nil
 }
 
 func (u *categoryUsecase) GetCategories(c context.Context, userID string) ([]dto.CategoryResponse, error) {
@@ -41,19 +40,13 @@ func (u *categoryUsecase) GetCategories(c context.Context, userID string) ([]dto
 	if err != nil {
 		return nil, err
 	}
-
 	var responses []dto.CategoryResponse
 	for _, cat := range categories {
 		responses = append(responses, dto.CategoryResponse{
-			ID:   cat.ID,
-			Name: cat.Name,
-		})
+			ID: cat.ID, 
+			Name: cat.Name, 
+			Icon: cat.Icon})
 	}
-
-	// Cegah balasan 'null' di JSON jika data kosong
-	if responses == nil {
-		responses = []dto.CategoryResponse{}
-	}
-
+	if responses == nil { responses = []dto.CategoryResponse{} }
 	return responses, nil
 }

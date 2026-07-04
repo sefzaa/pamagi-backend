@@ -8,8 +8,9 @@ type Word struct {
 	UserID       string        `gorm:"type:varchar(36);not null"`
 	RussianWord  string        `gorm:"type:varchar(255);not null"`
 	Translation  string        `gorm:"type:varchar(255);not null"`
-	PartOfSpeech string        `gorm:"type:enum('NOUN', 'VERB', 'ADJECTIVE', 'ADVERB', 'PRONOUN', 'PREPOSITION', 'CONJUNCTION', 'INTERJECTION');not null"`
+	PartOfSpeech string        `gorm:"type:enum('NOUN', 'VERB', 'ADJECTIVE', 'ADVERB', 'PRONOUN', 'PREPOSITION', 'CONJUNCTION', 'INTERJECTION', 'IDIOM');not null"`
 	IsFavorite   bool          `gorm:"default:false"`
+	IsBookmarked bool          `gorm:"default:false"`
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	DeletedAt    *time.Time    // Gunakan pointer untuk soft delete
@@ -19,15 +20,7 @@ type Word struct {
 	Examples     []WordExample `gorm:"foreignKey:WordID;constraint:OnDelete:CASCADE;"`
 }
 
-// Representasi tabel categories
-type Category struct {
-	ID        string     `gorm:"type:varchar(36);primaryKey"`
-	UserID    string     `gorm:"type:varchar(36);not null"`
-	Name      string     `gorm:"type:varchar(100);not null"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
-}
+
 
 // Representasi tabel word_examples
 type WordExample struct {

@@ -5,8 +5,8 @@ type GenerateFlashcardRequest struct {
 	FilterType   string   `json:"filter_type" binding:"required"` // Opsi: "category", "part_of_speech", "favorite", "date_range", "manual", "all"
 	
 	// Parameter opsional (tergantung FilterType)
-	CategoryID   string   `json:"category_id"`
-	PartOfSpeech string   `json:"part_of_speech"`
+	CategoryIDs   []string `json:"category_ids"`
+	PartsOfSpeech []string `json:"parts_of_speech"`
 	StartDate    string   `json:"start_date"` // Format: YYYY-MM-DD
 	EndDate      string   `json:"end_date"`
 	WordIDs      []string `json:"word_ids"`   // Jika pilih manual satu per satu
@@ -16,6 +16,7 @@ type GenerateFlashcardRequest struct {
 
 // 2. Request untuk FE mengirim laporan setelah selesai kuis
 type SubmitQuizRequest struct {
+	ID               string             `json:"id"`
 	TotalWords       int                `json:"total_words" binding:"required"`
 	CorrectAnswers   int                `json:"correct_answers"`
 	IncorrectAnswers int                `json:"incorrect_answers"`

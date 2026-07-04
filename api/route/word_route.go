@@ -21,4 +21,7 @@ func NewWordRouter(db *gorm.DB, protectedRouter *gin.RouterGroup) {
 	protectedRouter.POST("/words", wordController.CreateWord)
 	protectedRouter.GET("/words", wordController.GetWords)
 	protectedRouter.PUT("/words/:id/favorite", wordController.ToggleFavorite)
+	protectedRouter.GET("/words/:id", wordController.GetWordDetail) // Detail lengkap
+	protectedRouter.PUT("/words/:id/bookmark", wordController.ToggleBookmark) // Bookmark
+	protectedRouter.DELETE("/words/:id", wordController.DeleteWord) // Hapus kata
 }

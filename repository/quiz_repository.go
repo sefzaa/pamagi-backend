@@ -26,9 +26,13 @@ func (r *quizRepository) GenerateQuestions(c context.Context, userID string, fil
 	// 1. Terapkan Filter Berdasarkan Pilihan User
 	switch filter.FilterType {
 	case "category":
-		query = query.Joins("JOIN word_categories wc ON wc.word_id = words.id").Where("wc.category_id = ?", filter.CategoryID)
+		if len(filter.CategoryIDs) > 0 {
+			query = query.Joins("JOIN word_categories wc ON wc.word_id = words.id").Where("wc.category_id IN ?", filter.CategoryIDs)
+		}
 	case "part_of_speech":
-		query = query.Where("part_of_speech = ?", filter.PartOfSpeech)
+		if len(filter.PartsOfSpeech) > 0 {
+			query = query.Where("part_of_speech IN ?", filter.PartsOfSpeech)
+		}	
 	case "favorite":
 		query = query.Where("is_favorite = ?", true)
 	case "date_range":
@@ -71,7 +75,26 @@ func (r *quizRepository) GenerateQuestions(c context.Context, userID string, fil
 
 
 func (r *quizRepository) SaveQuizHistory(c context.Context, session *entity.QuizHistory) error {
-	return r.db.WithContext(c).Create(session).Error
+	return r.db.WithContext(c).Transaction(func(tx *gorm.DB) error {
+		// 1. Simpan Header (Update atau Create baru)
+		if err := tx.Save(session).Error; err != nil {
+			return err
+		}
+
+		// 2. HAPUS SEMUA DETAIL LAMA YANG TERKAIT DENGAN SESSION INI
+		// Kita pakai Exec agar benar-benar mengeksekusi perintah SQL delete
+		if err := tx.Exec("DELETE FROM quiz_details WHERE quiz_history_id = ?", session.ID).Error; err != nil {
+			return err
+		}
+
+		// 3. Masukkan Detail Baru (Gunakan Create dengan slice)
+		if len(session.Details) > 0 {
+			if err := tx.Create(&session.Details).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 

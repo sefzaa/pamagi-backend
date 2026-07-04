@@ -60,18 +60,12 @@ func (u *quizUsecase) GenerateFlashcards(c context.Context, userID string, req *
 }
 
 func (u *quizUsecase) SubmitQuiz(c context.Context, userID string, req *dto.SubmitQuizRequest) error {
-	sessionID := uuid.New().String()
-
-	var details []entity.QuizDetail
-	for _, d := range req.Details {
-		details = append(details, entity.QuizDetail{
-			ID:            uuid.New().String(),
-			QuizHistoryID: sessionID,
-			WordID:        d.WordID,
-			IsCorrect:     d.IsCorrect,
-		})
+	sessionID := req.ID
+	if sessionID == "" {
+		sessionID = uuid.New().String()
 	}
 
+	// 1. Buat Header
 	session := &entity.QuizHistory{
 		ID:               sessionID,
 		UserID:           userID,
@@ -79,10 +73,21 @@ func (u *quizUsecase) SubmitQuiz(c context.Context, userID string, req *dto.Subm
 		CorrectAnswers:   req.CorrectAnswers,
 		IncorrectAnswers: req.IncorrectAnswers,
 		Score:            req.Score,
-		Status:           req.Status, // Ambil status dari DTO
-		Details:          details,
+		Status:           req.Status,
 		CreatedAt:        time.Now(),
 	}
+
+	// 2. Siapkan detail DENGAN UUID BARU SETIAP KALI DIPANGGIL
+	var details []entity.QuizDetail
+	for _, d := range req.Details {
+		details = append(details, entity.QuizDetail{
+			ID:            uuid.New().String(), // INI KUNCI UTAMA: Setiap loop buat UUID baru
+			QuizHistoryID: sessionID,
+			WordID:        d.WordID,
+			IsCorrect:     d.IsCorrect,
+		})
+	}
+	session.Details = details 
 
 	return u.quizRepo.SaveQuizHistory(c, session)
 }

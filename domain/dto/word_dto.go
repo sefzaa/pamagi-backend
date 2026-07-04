@@ -19,25 +19,32 @@ type ExampleRequest struct {
 type WordFilterRequest struct {
 	CategoryID   string `form:"category_id"`
 	PartOfSpeech string `form:"part_of_speech"`
-	IsFavorite   *bool  `form:"is_favorite"` // Pointer agar bisa bedain antara false dan kosong
-	SortBy       string `form:"sort_by"`     // Contoh: "newest", "oldest"
+	IsFavorite   *bool  `form:"is_favorite"`
+	IsBookmarked *bool  `form:"is_bookmarked"`
+	StartDate    string `form:"start_date"` // Format YYYY-MM-DD
+	EndDate      string `form:"end_date"`   // Format YYYY-MM-DD
+	SortBy       string `form:"sort_by"`    // newest, oldest, a_z, z_a
+	Page         int    `form:"page,default=1"`
+	Limit        int    `form:"limit,default=20"` // Limit 20 kata
 }
 
 // 3. Response untuk menampilkan data Word ke Frontend
 type WordResponse struct {
-	ID           string            `json:"id"`
-	RussianWord  string            `json:"russian_word"`
-	Translation  string            `json:"translation"`
-	PartOfSpeech string            `json:"part_of_speech"`
-	IsFavorite   bool              `json:"is_favorite"`
-	CreatedAt    string            `json:"created_at"`
-	Categories   []CategoryRes     `json:"categories"`
-	Examples     []WordExampleRes  `json:"examples"`
+	ID           string           `json:"id"`
+	RussianWord  string           `json:"russian_word"`
+	Translation  string           `json:"translation"`
+	PartOfSpeech string           `json:"part_of_speech"`
+	IsFavorite   bool             `json:"is_favorite"`
+	IsBookmarked bool             `json:"is_bookmarked"`
+	CreatedAt    string           `json:"created_at"`
+	Categories   []CategoryRes    `json:"categories"`
+	Examples     []WordExampleRes `json:"examples"`
 }
 
 type CategoryRes struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+	Icon string `json:"icon"`
 }
 
 type WordExampleRes struct {

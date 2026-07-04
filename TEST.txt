@@ -2,3 +2,6 @@ TEST1
 
 // @host pamagi.mydm.cloud
 // @BasePath /
+
+// @host localhost:8080
+// @BasePath /

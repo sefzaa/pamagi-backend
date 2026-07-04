@@ -36,7 +36,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/pamagi_domain_dto.CategoryResponse"
+                                "$ref": "#/definitions/dto.CategoryResponse"
                             }
                         }
                     }
@@ -66,7 +66,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pamagi_domain_dto.CreateCategoryRequest"
+                            "$ref": "#/definitions/dto.CreateCategoryRequest"
                         }
                     }
                 ],
@@ -74,7 +74,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/pamagi_domain_dto.CategoryResponse"
+                            "$ref": "#/definitions/dto.CategoryResponse"
                         }
                     },
                     "400": {
@@ -111,7 +111,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pamagi_domain_dto.GenerateFlashcardRequest"
+                            "$ref": "#/definitions/dto.GenerateFlashcardRequest"
                         }
                     }
                 ],
@@ -121,7 +121,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/pamagi_domain_dto.WordResponse"
+                                "$ref": "#/definitions/dto.WordResponse"
                             }
                         }
                     },
@@ -155,7 +155,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/pamagi_domain_dto.QuizHistoryResponse"
+                                "$ref": "#/definitions/dto.QuizHistoryResponse"
                             }
                         }
                     }
@@ -221,7 +221,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pamagi_domain_dto.SubmitQuizRequest"
+                            "$ref": "#/definitions/dto.SubmitQuizRequest"
                         }
                     }
                 ],
@@ -261,7 +261,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pamagi_domain_dto.LoginRequest"
+                            "$ref": "#/definitions/dto.LoginRequest"
                         }
                     }
                 ],
@@ -269,7 +269,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/pamagi_domain_dto.AuthResponse"
+                            "$ref": "#/definitions/dto.AuthResponse"
                         }
                     },
                     "400": {
@@ -344,7 +344,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pamagi_domain_dto.RegisterRequest"
+                            "$ref": "#/definitions/dto.RegisterRequest"
                         }
                     }
                 ],
@@ -377,7 +377,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Menampilkan daftar kosakata dengan fitur filter",
+                "description": "Menampilkan daftar kosakata dengan fitur filter kombo (limit 20)",
                 "produces": [
                     "application/json"
                 ],
@@ -405,9 +405,39 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "description": "Filter by Bookmark status",
+                        "name": "is_bookmarked",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
-                        "description": "Sorting (newest, oldest)",
+                        "description": "Filter by Start Date (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by End Date (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sorting (newest, oldest, a_z, z_a)",
                         "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Nomor Halaman (Default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Jumlah Data per Halaman (Default: 20)",
+                        "name": "limit",
                         "in": "query"
                     }
                 ],
@@ -417,7 +447,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/pamagi_domain_dto.WordResponse"
+                                "$ref": "#/definitions/dto.WordResponse"
                             }
                         }
                     }
@@ -447,7 +477,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pamagi_domain_dto.CreateWordRequest"
+                            "$ref": "#/definitions/dto.CreateWordRequest"
                         }
                     }
                 ],
@@ -462,6 +492,118 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/words/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Mengambil satu data kosakata beserta relasi kategori dan contoh kalimatnya",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Words"
+                ],
+                "summary": "Ambil Detail Kosakata",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID Kosakata",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.WordResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Menghapus satu kosakata beserta relasi kategori dan contoh kalimatnya secara permanen",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Words"
+                ],
+                "summary": "Hapus Kosakata",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID Kosakata",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.SuccessResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/words/{id}/bookmark": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Menandai atau menghapus tanda bookmark pada suatu kata",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Words"
+                ],
+                "summary": "Ubah Status Bookmark",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID Kosakata",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.SuccessResponse"
                         }
                     }
                 }
@@ -519,7 +661,7 @@ const docTemplate = `{
                 }
             }
         },
-        "pamagi_domain_dto.AuthResponse": {
+        "dto.AuthResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -529,13 +671,16 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user": {
-                    "$ref": "#/definitions/pamagi_domain_dto.UserResponse"
+                    "$ref": "#/definitions/dto.UserResponse"
                 }
             }
         },
-        "pamagi_domain_dto.CategoryRes": {
+        "dto.CategoryRes": {
             "type": "object",
             "properties": {
+                "icon": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -544,9 +689,12 @@ const docTemplate = `{
                 }
             }
         },
-        "pamagi_domain_dto.CategoryResponse": {
+        "dto.CategoryResponse": {
             "type": "object",
             "properties": {
+                "icon": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -555,18 +703,23 @@ const docTemplate = `{
                 }
             }
         },
-        "pamagi_domain_dto.CreateCategoryRequest": {
+        "dto.CreateCategoryRequest": {
             "type": "object",
             "required": [
+                "icon",
                 "name"
             ],
             "properties": {
+                "icon": {
+                    "description": "Menangkap nama icon dari FE",
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 }
             }
         },
-        "pamagi_domain_dto.CreateWordRequest": {
+        "dto.CreateWordRequest": {
             "type": "object",
             "required": [
                 "part_of_speech",
@@ -585,7 +738,7 @@ const docTemplate = `{
                     "description": "Array contoh kalimat (Opsional)",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pamagi_domain_dto.ExampleRequest"
+                        "$ref": "#/definitions/dto.ExampleRequest"
                     }
                 },
                 "part_of_speech": {
@@ -599,7 +752,7 @@ const docTemplate = `{
                 }
             }
         },
-        "pamagi_domain_dto.ExampleRequest": {
+        "dto.ExampleRequest": {
             "type": "object",
             "required": [
                 "russian_sentence",
@@ -614,15 +767,18 @@ const docTemplate = `{
                 }
             }
         },
-        "pamagi_domain_dto.GenerateFlashcardRequest": {
+        "dto.GenerateFlashcardRequest": {
             "type": "object",
             "required": [
                 "filter_type"
             ],
             "properties": {
-                "category_id": {
+                "category_ids": {
                     "description": "Parameter opsional (tergantung FilterType)",
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "end_date": {
                     "type": "string"
@@ -631,8 +787,11 @@ const docTemplate = `{
                     "description": "Opsi: \"category\", \"part_of_speech\", \"favorite\", \"date_range\", \"manual\", \"all\"",
                     "type": "string"
                 },
-                "part_of_speech": {
-                    "type": "string"
+                "parts_of_speech": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "sort_by": {
                     "description": "Opsi: \"name_asc\", \"name_desc\", \"created_asc\", \"created_desc\", \"updated_desc\"",
@@ -651,7 +810,7 @@ const docTemplate = `{
                 }
             }
         },
-        "pamagi_domain_dto.LoginRequest": {
+        "dto.LoginRequest": {
             "type": "object",
             "required": [
                 "identifier",
@@ -667,7 +826,7 @@ const docTemplate = `{
                 }
             }
         },
-        "pamagi_domain_dto.QuizDetailResponse": {
+        "dto.QuizDetailResponse": {
             "type": "object",
             "properties": {
                 "is_correct": {
@@ -684,7 +843,7 @@ const docTemplate = `{
                 }
             }
         },
-        "pamagi_domain_dto.QuizHistoryResponse": {
+        "dto.QuizHistoryResponse": {
             "type": "object",
             "properties": {
                 "correct_answers": {
@@ -697,7 +856,7 @@ const docTemplate = `{
                     "description": "omitempty agar null untuk user Free",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pamagi_domain_dto.QuizDetailResponse"
+                        "$ref": "#/definitions/dto.QuizDetailResponse"
                     }
                 },
                 "id": {
@@ -714,7 +873,7 @@ const docTemplate = `{
                 }
             }
         },
-        "pamagi_domain_dto.RegisterRequest": {
+        "dto.RegisterRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -744,7 +903,7 @@ const docTemplate = `{
                 }
             }
         },
-        "pamagi_domain_dto.SubmitQuizDetail": {
+        "dto.SubmitQuizDetail": {
             "type": "object",
             "required": [
                 "word_id"
@@ -758,7 +917,7 @@ const docTemplate = `{
                 }
             }
         },
-        "pamagi_domain_dto.SubmitQuizRequest": {
+        "dto.SubmitQuizRequest": {
             "type": "object",
             "required": [
                 "status",
@@ -771,8 +930,11 @@ const docTemplate = `{
                 "details": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pamagi_domain_dto.SubmitQuizDetail"
+                        "$ref": "#/definitions/dto.SubmitQuizDetail"
                     }
+                },
+                "id": {
+                    "type": "string"
                 },
                 "incorrect_answers": {
                     "type": "integer"
@@ -793,7 +955,7 @@ const docTemplate = `{
                 }
             }
         },
-        "pamagi_domain_dto.UserResponse": {
+        "dto.UserResponse": {
             "type": "object",
             "properties": {
                 "email": {
@@ -810,7 +972,7 @@ const docTemplate = `{
                 }
             }
         },
-        "pamagi_domain_dto.WordExampleRes": {
+        "dto.WordExampleRes": {
             "type": "object",
             "properties": {
                 "id": {
@@ -824,13 +986,13 @@ const docTemplate = `{
                 }
             }
         },
-        "pamagi_domain_dto.WordResponse": {
+        "dto.WordResponse": {
             "type": "object",
             "properties": {
                 "categories": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pamagi_domain_dto.CategoryRes"
+                        "$ref": "#/definitions/dto.CategoryRes"
                     }
                 },
                 "created_at": {
@@ -839,11 +1001,14 @@ const docTemplate = `{
                 "examples": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pamagi_domain_dto.WordExampleRes"
+                        "$ref": "#/definitions/dto.WordExampleRes"
                     }
                 },
                 "id": {
                     "type": "string"
+                },
+                "is_bookmarked": {
+                    "type": "boolean"
                 },
                 "is_favorite": {
                     "type": "boolean"
@@ -872,7 +1037,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "pamagi.mydm.cloud",
+	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Pamagi API",
