@@ -124,6 +124,73 @@ definitions:
     - identifier
     - password
     type: object
+  dto.NoteDetailResponse:
+    properties:
+      color:
+        type: string
+      content:
+        description: Isi utuh (Rich text / Delta)
+        type: string
+      id:
+        type: string
+      is_favorite:
+        type: boolean
+      is_pinned:
+        type: boolean
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.NoteRequest:
+    properties:
+      color:
+        type: string
+      content:
+        description: String mentah dari editor FE
+        type: string
+      is_favorite:
+        type: boolean
+      is_pinned:
+        type: boolean
+      tags:
+        description: 'Array of string untuk nama tag (misal: ["grammar", "vocabulary"])'
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    required:
+    - content
+    - title
+    type: object
+  dto.NoteResponse:
+    properties:
+      color:
+        type: string
+      content:
+        type: string
+      id:
+        type: string
+      is_favorite:
+        type: boolean
+      is_pinned:
+        type: boolean
+      preview:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
   dto.QuizDetailResponse:
     properties:
       is_correct:
@@ -460,6 +527,193 @@ paths:
       summary: Logout user
       tags:
       - Auth
+  /notes:
+    get:
+      description: Menampilkan semua catatan milik user (diurutkan dari yang dipin
+        dan terbaru)
+      parameters:
+      - description: Sort by (title_asc, created_desc, updated_desc)
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.NoteResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Ambil Daftar Catatan
+      tags:
+      - Note
+    post:
+      consumes:
+      - application/json
+      description: Menyimpan catatan baru beserta tag-nya (mendukung format rich text
+        dari FE)
+      parameters:
+      - description: Data Catatan
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NoteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Buat Catatan Baru
+      tags:
+      - Note
+  /notes/{id}:
+    delete:
+      description: Menghapus catatan berdasarkan ID
+      parameters:
+      - description: ID Catatan
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Hapus Catatan
+      tags:
+      - Note
+    get:
+      description: Mengambil satu catatan beserta isi lengkapnya
+      parameters:
+      - description: ID Catatan
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.NoteDetailResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Ambil Detail Catatan
+      tags:
+      - Note
+    put:
+      consumes:
+      - application/json
+      description: Memperbarui isi catatan dan tag berdasarkan ID catatan
+      parameters:
+      - description: ID Catatan
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data Catatan yang Diupdate
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NoteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Edit Catatan
+      tags:
+      - Note
+  /notes/{id}/favorite:
+    patch:
+      description: Menandai atau menghapus tanda favorit pada catatan (hanya mengirim
+        ID)
+      parameters:
+      - description: ID Catatan
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Toggle Favorite Catatan
+      tags:
+      - Note
+  /notes/{id}/pin:
+    patch:
+      description: Menyematkan atau melepas sematan catatan (hanya mengirim ID)
+      parameters:
+      - description: ID Catatan
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Toggle Pin Catatan
+      tags:
+      - Note
   /register:
     post:
       consumes:
@@ -623,7 +877,7 @@ paths:
       tags:
       - Words
   /words/{id}/bookmark:
-    put:
+    patch:
       description: Menandai atau menghapus tanda bookmark pada suatu kata
       parameters:
       - description: ID Kosakata
@@ -644,7 +898,7 @@ paths:
       tags:
       - Words
   /words/{id}/favorite:
-    put:
+    patch:
       description: Menandai atau menghapus tanda favorit pada suatu kata
       parameters:
       - description: ID Kosakata

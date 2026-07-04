@@ -33,6 +33,7 @@ func Setup(env *bootstrap.Env, db *gorm.DB, redis *redis.Client, ginEngine *gin.
 	NewWordRouter(db, protectedRouter)
 	NewCategoryRouter(db, protectedRouter)
 	NewQuizRouter(db, protectedRouter)
+	NewNoteRouter(db, protectedRouter)
 	
 	
 	

@@ -107,7 +107,7 @@ func (wc *WordController) GetWordDetail(c *gin.Context) {
 // @Produce json
 // @Param id path string true "ID Kosakata"
 // @Success 200 {object} domain.SuccessResponse
-// @Router /words/{id}/favorite [put]
+// @Router /words/{id}/favorite [patch]
 func (wc *WordController) ToggleFavorite(c *gin.Context) {
 	userID := c.GetString("x-user-id")
 	wordID := c.Param("id")
@@ -129,7 +129,7 @@ func (wc *WordController) ToggleFavorite(c *gin.Context) {
 // @Produce json
 // @Param id path string true "ID Kosakata"
 // @Success 200 {object} domain.SuccessResponse
-// @Router /words/{id}/bookmark [put]
+// @Router /words/{id}/bookmark [patch]
 func (wc *WordController) ToggleBookmark(c *gin.Context) {
 	userID := c.GetString("x-user-id")
 	wordID := c.Param("id")
