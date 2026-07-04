@@ -97,3 +97,26 @@ func (u *wordUsecase) ToggleBookmark(c context.Context, wordID string, userID st
 func (u *wordUsecase) DeleteWord(c context.Context, wordID string, userID string) error {
 	return u.wordRepo.Delete(c, wordID, userID)
 }
+
+func (u *wordUsecase) UpdateWord(c context.Context, wordID string, userID string, req *dto.CreateWordRequest) error {
+	var examples []entity.WordExample
+	for _, exReq := range req.Examples {
+		examples = append(examples, entity.WordExample{
+			ID:                 uuid.New().String(),
+			WordID:             wordID, // Ikat langsung dengan ID kata yang diedit
+			RussianSentence:    exReq.RussianSentence,
+			TranslatedSentence: exReq.TranslatedSentence,
+		})
+	}
+
+	word := &entity.Word{
+		ID:           wordID,
+		UserID:       userID,
+		RussianWord:  req.RussianWord,
+		Translation:  req.Translation,
+		PartOfSpeech: req.PartOfSpeech,
+		Examples:     examples,
+	}
+
+	return u.wordRepo.Update(c, word, req.CategoryIDs)
+}

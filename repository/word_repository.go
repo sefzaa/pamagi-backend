@@ -107,3 +107,47 @@ func (r *wordRepository) Delete(c context.Context, wordID string, userID string)
 		return tx.Delete(&word).Error
 	})
 }
+
+func (r *wordRepository) Update(c context.Context, word *entity.Word, categoryIDs []string) error {
+	return r.db.WithContext(c).Transaction(func(tx *gorm.DB) error {
+		// 1. Pastikan kata tersebut ada dan memang milik user yang sedang login
+		var existing entity.Word
+		if err := tx.Where("id = ? AND user_id = ?", word.ID, word.UserID).First(&existing).Error; err != nil {
+			return err
+		}
+
+		// 2. Update data utama kata
+		if err := tx.Model(&existing).Updates(map[string]interface{}{
+			"russian_word":   word.RussianWord,
+			"translation":    word.Translation,
+			"part_of_speech": word.PartOfSpeech,
+		}).Error; err != nil {
+			return err
+		}
+
+		// 3. Replace relasi Kategori (tabel pivot word_categories otomatis diurus GORM)
+		var categories []entity.Category
+		if len(categoryIDs) > 0 {
+			tx.Where("id IN ?", categoryIDs).Find(&categories)
+		}
+		if err := tx.Model(&existing).Association("Categories").Replace(&categories); err != nil {
+			return err
+		}
+
+		// 4. Update Contoh Kalimat (Hapus yang lama, simpan yang baru)
+		if err := tx.Where("word_id = ?", word.ID).Delete(&entity.WordExample{}).Error; err != nil {
+			return err
+		}
+		if len(word.Examples) > 0 {
+			// Pastikan setiap contoh kalimat baru di-binding ke WordID yang sedang diedit
+			for i := range word.Examples {
+				word.Examples[i].WordID = word.ID
+			}
+			if err := tx.Create(&word.Examples).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}

@@ -164,3 +164,34 @@ func (wc *WordController) DeleteWord(c *gin.Context) {
 
 	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Kosakata berhasil dihapus"})
 }
+
+
+// UpdateWord godoc
+// @Summary Edit Kosakata
+// @Description Memperbarui data kosakata, kategori, dan contoh kalimat
+// @Tags Words
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "ID Kosakata"
+// @Param request body dto.CreateWordRequest true "Data Kosakata yang Diupdate"
+// @Success 200 {object} domain.SuccessResponse
+// @Failure 400 {object} domain.ErrorResponse
+// @Router /words/{id} [put]
+func (wc *WordController) UpdateWord(c *gin.Context) {
+	userID := c.GetString("x-user-id")
+	wordID := c.Param("id")
+	var request dto.CreateWordRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: err.Error()})
+		return
+	}
+
+	if err := wc.WordUsecase.UpdateWord(c.Request.Context(), wordID, userID, &request); err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal memperbarui kosakata"})
+		return
+	}
+
+	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Kosakata berhasil diperbarui"})
+}

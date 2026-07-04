@@ -13,6 +13,7 @@ type WordRepository interface {
 	ToggleFavorite(c context.Context, wordID string, userID string) error
 	ToggleBookmark(c context.Context, wordID string, userID string) error // Baru
 	Delete(c context.Context, wordID string, userID string) error
+	Update(c context.Context, word *entity.Word, categoryIDs []string) error
 }
 
 type WordUsecase interface {
@@ -22,4 +23,5 @@ type WordUsecase interface {
 	ToggleFavorite(c context.Context, wordID string, userID string) error
 	ToggleBookmark(c context.Context, wordID string, userID string) error // Baru
 	DeleteWord(c context.Context, wordID string, userID string) error
+	UpdateWord(c context.Context, wordID string, userID string, req *dto.CreateWordRequest) error
 }
