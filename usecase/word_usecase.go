@@ -68,16 +68,38 @@ func mapToWordResponse(w entity.Word) dto.WordResponse {
 	}
 }
 
-func (u *wordUsecase) GetWords(c context.Context, userID string, filter dto.WordFilterRequest) ([]dto.WordResponse, error) {
-	words, err := u.wordRepo.Fetch(c, userID, filter)
-	if err != nil { return nil, err }
+// 1. Ubah fungsi GetWords
+func (u *wordUsecase) GetWords(c context.Context, userID string, filter dto.WordFilterRequest) (dto.WordPaginationResponse, error) {
+	words, total, err := u.wordRepo.Fetch(c, userID, filter)
+	if err != nil {
+		return dto.WordPaginationResponse{}, err
+	}
 
 	var responses []dto.WordResponse
 	for _, w := range words {
 		responses = append(responses, mapToWordResponse(w))
 	}
-	if responses == nil { responses = []dto.WordResponse{} }
-	return responses, nil
+	if responses == nil {
+		responses = []dto.WordResponse{}
+	}
+
+	// Kalkulasi total halaman
+	totalPages := int((total + int64(filter.Limit) - 1) / int64(filter.Limit))
+
+	return dto.WordPaginationResponse{
+		Data: responses,
+		Meta: dto.PaginationMeta{
+			TotalItems:  total,
+			TotalPages:  totalPages,
+			CurrentPage: filter.Page,
+			Limit:       filter.Limit,
+		},
+	}, nil
+}
+
+// 2. Tambahkan fungsi GetWordTypes
+func (u *wordUsecase) GetWordTypes(c context.Context, userID string) ([]dto.WordTypeCountResponse, error) {
+	return u.wordRepo.CountByPartOfSpeech(c, userID)
 }
 
 func (u *wordUsecase) GetWordDetail(c context.Context, wordID string, userID string) (dto.WordResponse, error) {

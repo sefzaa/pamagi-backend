@@ -20,6 +20,10 @@ func NewWordRouter(db *gorm.DB, protectedRouter *gin.RouterGroup) {
 	// Semua fitur word harus login dulu, jadi kita pakai protectedRouter
 	protectedRouter.POST("/words", wordController.CreateWord)
 	protectedRouter.GET("/words", wordController.GetWords)
+
+	protectedRouter.GET("/words/types", wordController.GetWordTypes)
+
+	
 	protectedRouter.GET("/words/:id", wordController.GetWordDetail) // Detail lengkap
 	protectedRouter.DELETE("/words/:id", wordController.DeleteWord) // Hapus kata
 	protectedRouter.PUT("/words/:id", wordController.UpdateWord) // Tambahan Edit Kosakata

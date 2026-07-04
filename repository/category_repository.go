@@ -22,7 +22,13 @@ func (r *categoryRepository) Create(c context.Context, category *entity.Category
 
 func (r *categoryRepository) FetchByUserID(c context.Context, userID string) ([]entity.Category, error) {
 	var categories []entity.Category
-	// Ambil kategori yang hanya dimiliki oleh user yang sedang login
-	err := r.db.WithContext(c).Where("user_id = ?", userID).Find(&categories).Error
+	
+	err := r.db.WithContext(c).Table("categories").
+		Select("categories.*, COUNT(word_categories.word_id) as count").
+		Joins("LEFT JOIN word_categories ON categories.id = word_categories.category_id").
+		Where("categories.user_id = ?", userID).
+		Group("categories.id").
+		Find(&categories).Error
+		
 	return categories, err
 }

@@ -738,10 +738,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.WordResponse"
-                            }
+                            "$ref": "#/definitions/dto.WordPaginationResponse"
                         }
                     }
                 }
@@ -785,6 +782,34 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/words/types": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Menampilkan daftar jenis kata beserta jumlah kata yang dimiliki user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Words"
+                ],
+                "summary": "Ambil Daftar Part of Speech",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.WordTypeCountResponse"
+                            }
                         }
                     }
                 }
@@ -1035,6 +1060,9 @@ const docTemplate = `{
         "dto.CategoryResponse": {
             "type": "object",
             "properties": {
+                "count": {
+                    "type": "integer"
+                },
                 "icon": {
                     "type": "string"
                 },
@@ -1269,6 +1297,23 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "current_page": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "total_items": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.QuizDetailResponse": {
             "type": "object",
             "properties": {
@@ -1432,6 +1477,21 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.WordPaginationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "Data tetap menggunakan struktur list kata yang lama",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.WordResponse"
+                    }
+                },
+                "meta": {
+                    "$ref": "#/definitions/dto.PaginationMeta"
+                }
+            }
+        },
         "dto.WordResponse": {
             "type": "object",
             "properties": {
@@ -1466,6 +1526,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "translation": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.WordTypeCountResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "part_of_speech": {
                     "type": "string"
                 }
             }

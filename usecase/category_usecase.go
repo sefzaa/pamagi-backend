@@ -45,7 +45,9 @@ func (u *categoryUsecase) GetCategories(c context.Context, userID string) ([]dto
 		responses = append(responses, dto.CategoryResponse{
 			ID: cat.ID, 
 			Name: cat.Name, 
-			Icon: cat.Icon})
+			Icon: cat.Icon,
+			Count: cat.Count,
+		})
 	}
 	if responses == nil { responses = []dto.CategoryResponse{} }
 	return responses, nil

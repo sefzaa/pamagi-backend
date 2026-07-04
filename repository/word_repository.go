@@ -33,19 +33,18 @@ func (r *wordRepository) Create(c context.Context, word *entity.Word, categoryID
 	})
 }
 
-func (r *wordRepository) Fetch(c context.Context, userID string, filter dto.WordFilterRequest) ([]entity.Word, error) {
+// 1. Ubah fungsi Fetch
+func (r *wordRepository) Fetch(c context.Context, userID string, filter dto.WordFilterRequest) ([]entity.Word, int64, error) {
 	var words []entity.Word
-	query := r.db.WithContext(c).Preload("Categories").Preload("Examples").Where("user_id = ?", userID)
+	var total int64 // Variabel untuk menyimpan total item
+	
+	// Query dasar
+	query := r.db.WithContext(c).Model(&entity.Word{}).Where("user_id = ?", userID)
 
-	if filter.PartOfSpeech != "" {
-		query = query.Where("part_of_speech = ?", filter.PartOfSpeech)
-	}
-	if filter.IsFavorite != nil {
-		query = query.Where("is_favorite = ?", *filter.IsFavorite)
-	}
-	if filter.IsBookmarked != nil {
-		query = query.Where("is_bookmarked = ?", *filter.IsBookmarked)
-	}
+	// --- Terapkan Filter (Sama seperti sebelumnya) ---
+	if filter.PartOfSpeech != "" { query = query.Where("part_of_speech = ?", filter.PartOfSpeech) }
+	if filter.IsFavorite != nil { query = query.Where("is_favorite = ?", *filter.IsFavorite) }
+	if filter.IsBookmarked != nil { query = query.Where("is_bookmarked = ?", *filter.IsBookmarked) }
 	if filter.CategoryID != "" {
 		query = query.Joins("JOIN word_categories wc ON wc.word_id = words.id").Where("wc.category_id = ?", filter.CategoryID)
 	}
@@ -53,20 +52,35 @@ func (r *wordRepository) Fetch(c context.Context, userID string, filter dto.Word
 		query = query.Where("DATE(words.created_at) BETWEEN ? AND ?", filter.StartDate, filter.EndDate)
 	}
 
-	switch filter.SortBy {
-	case "oldest":
-		query = query.Order("words.created_at ASC")
-	case "a_z":
-		query = query.Order("words.russian_word ASC") // Database UTF-8 otomatis urutkan Cyrillic/Kanji
-	case "z_a":
-		query = query.Order("words.russian_word DESC")
-	default:
-		query = query.Order("words.created_at DESC") // Default: newest
+	// HITUNG TOTAL DATA SEBELUM DI-LIMIT
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
 
+	// --- Terapkan Sorting (Sama seperti sebelumnya) ---
+	switch filter.SortBy {
+	case "oldest": query = query.Order("words.created_at ASC")
+	case "a_z": query = query.Order("words.russian_word ASC")
+	case "z_a": query = query.Order("words.russian_word DESC")
+	default: query = query.Order("words.created_at DESC")
+	}
+
+	// AMBIL DATA DENGAN PRELOAD DAN LIMIT
 	offset := (filter.Page - 1) * filter.Limit
-	err := query.Limit(filter.Limit).Offset(offset).Find(&words).Error
-	return words, err
+	err := query.Preload("Categories").Preload("Examples").Limit(filter.Limit).Offset(offset).Find(&words).Error
+	
+	return words, total, err // Kembalikan totalnya juga
+}
+
+// 2. Tambahkan fungsi baru untuk menghitung Part of Speech
+func (r *wordRepository) CountByPartOfSpeech(c context.Context, userID string) ([]dto.WordTypeCountResponse, error) {
+	var counts []dto.WordTypeCountResponse
+	err := r.db.WithContext(c).Model(&entity.Word{}).
+		Select("part_of_speech, count(id) as count").
+		Where("user_id = ? AND deleted_at IS NULL", userID). // Jangan hitung yang sudah dihapus
+		Group("part_of_speech").
+		Scan(&counts).Error
+	return counts, err
 }
 
 func (r *wordRepository) FetchByID(c context.Context, wordID string, userID string) (entity.Word, error) {

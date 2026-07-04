@@ -30,6 +30,8 @@ definitions:
     type: object
   dto.CategoryResponse:
     properties:
+      count:
+        type: integer
       icon:
         type: string
       id:
@@ -191,6 +193,17 @@ definitions:
       updated_at:
         type: string
     type: object
+  dto.PaginationMeta:
+    properties:
+      current_page:
+        type: integer
+      limit:
+        type: integer
+      total_items:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
   dto.QuizDetailResponse:
     properties:
       is_correct:
@@ -300,6 +313,16 @@ definitions:
       translated_sentence:
         type: string
     type: object
+  dto.WordPaginationResponse:
+    properties:
+      data:
+        description: Data tetap menggunakan struktur list kata yang lama
+        items:
+          $ref: '#/definitions/dto.WordResponse'
+        type: array
+      meta:
+        $ref: '#/definitions/dto.PaginationMeta'
+    type: object
   dto.WordResponse:
     properties:
       categories:
@@ -323,6 +346,13 @@ definitions:
       russian_word:
         type: string
       translation:
+        type: string
+    type: object
+  dto.WordTypeCountResponse:
+    properties:
+      count:
+        type: integer
+      part_of_speech:
         type: string
     type: object
 host: pamagi.mydm.cloud
@@ -790,9 +820,7 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/dto.WordResponse'
-            type: array
+            $ref: '#/definitions/dto.WordPaginationResponse'
       security:
       - ApiKeyAuth: []
       summary: Ambil Daftar Kosakata
@@ -948,6 +976,24 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Ubah Status Favorit
+      tags:
+      - Words
+  /words/types:
+    get:
+      description: Menampilkan daftar jenis kata beserta jumlah kata yang dimiliki
+        user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.WordTypeCountResponse'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Ambil Daftar Part of Speech
       tags:
       - Words
 securityDefinitions:

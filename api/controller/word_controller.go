@@ -56,7 +56,7 @@ func (wc *WordController) CreateWord(c *gin.Context) {
 // @Param sort_by query string false "Sorting (newest, oldest, a_z, z_a)"
 // @Param page query int false "Nomor Halaman (Default: 1)"
 // @Param limit query int false "Jumlah Data per Halaman (Default: 20)"
-// @Success 200 {array} dto.WordResponse
+// @Success 200 {object} dto.WordPaginationResponse
 // @Router /words [get]
 func (wc *WordController) GetWords(c *gin.Context) {
 	userID := c.GetString("x-user-id")
@@ -194,4 +194,25 @@ func (wc *WordController) UpdateWord(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Kosakata berhasil diperbarui"})
+}
+
+
+// GetWordTypes godoc
+// @Summary Ambil Daftar Part of Speech
+// @Description Menampilkan daftar jenis kata beserta jumlah kata yang dimiliki user
+// @Tags Words
+// @Security ApiKeyAuth
+// @Produce json
+// @Success 200 {array} dto.WordTypeCountResponse
+// @Router /words/types [get]
+func (wc *WordController) GetWordTypes(c *gin.Context) {
+	userID := c.GetString("x-user-id")
+
+	responses, err := wc.WordUsecase.GetWordTypes(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal mengambil tipe kata"})
+		return
+	}
+
+	c.JSON(http.StatusOK, responses)
 }

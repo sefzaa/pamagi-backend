@@ -52,3 +52,23 @@ type WordExampleRes struct {
 	RussianSentence    string `json:"russian_sentence"`
 	TranslatedSentence string `json:"translated_sentence"`
 }
+
+// Tambahkan struct ini di bawah WordFilterRequest
+
+type PaginationMeta struct {
+	TotalItems  int64 `json:"total_items"`
+	TotalPages  int   `json:"total_pages"`
+	CurrentPage int   `json:"current_page"`
+	Limit       int   `json:"limit"`
+}
+
+type WordPaginationResponse struct {
+	Data []WordResponse `json:"data"` // Data tetap menggunakan struktur list kata yang lama
+	Meta PaginationMeta `json:"meta"`
+}
+
+// Tambahkan struct ini untuk respons Part of Speech
+type WordTypeCountResponse struct {
+	PartOfSpeech string `json:"part_of_speech"`
+	Count        int64  `json:"count"`
+}
