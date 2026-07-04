@@ -17,7 +17,7 @@ import (
 // @title Pamagi API
 // @version 1.0
 // @description Ini adalah dokumentasi API untuk backend Pamagi.
-// @host localhost:8080
+// @host pamagi.mydm.cloud
 // @BasePath /
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
