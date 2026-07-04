@@ -152,6 +152,8 @@ definitions:
         type: integer
       score:
         type: number
+      status:
+        type: string
       total_words:
         type: integer
     type: object

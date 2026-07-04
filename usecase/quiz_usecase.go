@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"math/rand" // Tambahkan ini
 	"time"
 	"pamagi/domain"
 	"pamagi/domain/dto"
@@ -19,21 +20,27 @@ func NewQuizUsecase(quizRepo domain.QuizRepository) domain.QuizUsecase {
 }
 
 func (u *quizUsecase) GenerateFlashcards(c context.Context, userID string, req *dto.GenerateFlashcardRequest) ([]dto.WordResponse, error) {
-	// TODO: Nanti kita bisa query ke tabel users untuk cek apakah dia PREMIUM.
-	// Sementara kita hardcode default Free (20 kata). Jika premium, ubah jadi 100.
 	isPremium := false 
 	limit := 20
 	if isPremium {
 		limit = 100
 	}
 
+	// 1. Tarik kata dari database (Data akan selalu 20 terbaru jika otomatis/tidak ada sort lain)
 	words, err := u.quizRepo.GenerateQuestions(c, userID, req, limit)
 	if err != nil {
 		return nil, err
 	}
 
+	// 2. ACAK URUTAN SLICE DI SINI
+	// Buat seed agar hasil acakan selalu berbeda setiap fungsi dipanggil
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	r.Shuffle(len(words), func(i, j int) {
+		words[i], words[j] = words[j], words[i]
+	})
+
 	// Mapping Entity ke DTO WordResponse (Bisa pakai struktur response Word yang sudah ada)
-	var responses []dto.WordResponse
+var responses []dto.WordResponse
 	for _, w := range words {
 		var catRes []dto.CategoryRes
 		for _, cat := range w.Categories {
@@ -123,6 +130,7 @@ func (u *quizUsecase) GetQuizHistories(c context.Context, userID string) ([]dto.
 			CorrectAnswers:   s.CorrectAnswers,
 			IncorrectAnswers: s.IncorrectAnswers,
 			Score:            s.Score,
+			Status:           s.Status,
 			CreatedAt:        s.CreatedAt.Format("2006-01-02 15:04:05"),
 			Details:          detailRes,
 		})

@@ -868,6 +868,9 @@ const docTemplate = `{
                 "score": {
                     "type": "number"
                 },
+                "status": {
+                    "type": "string"
+                },
                 "total_words": {
                     "type": "integer"
                 }

@@ -42,30 +42,24 @@ func (r *quizRepository) GenerateQuestions(c context.Context, userID string, fil
 		query = query.Where("words.id IN ?", filter.WordIDs)
 	}
 
-	// 2. Hitung jumlah data SEBELUM dilimit
+// 2. Hitung jumlah data SEBELUM dilimit
 	var count int64
 	query.Count(&count)
 
-	// 3. Logika Sorting & Randomizer
-	if int(count) > limit {
-		// Jika data melebihi limit (misal > 20), paksa urutan jadi ACAK
-		query = query.Order("RAND()")
-	} else {
-		// Jika data kurang dari limit, ikuti kemauan sorting user
-		switch filter.SortBy {
-		case "name_asc":
-			query = query.Order("russian_word ASC")
-		case "name_desc":
-			query = query.Order("russian_word DESC")
-		case "created_asc":
-			query = query.Order("created_at ASC")
-		case "created_desc":
-			query = query.Order("created_at DESC")
-		case "updated_desc":
-			query = query.Order("updated_at DESC")
-		default:
-			query = query.Order("created_at DESC") // Default terbaru
-		}
+	// 3. Logika Sorting (Hapus query.Order("RAND()") agar selalu urut dulu sebelum dilimit)
+	switch filter.SortBy {
+	case "name_asc":
+		query = query.Order("russian_word ASC")
+	case "name_desc":
+		query = query.Order("russian_word DESC")
+	case "created_asc":
+		query = query.Order("created_at ASC")
+	case "created_desc":
+		query = query.Order("created_at DESC")
+	case "updated_desc":
+		query = query.Order("updated_at DESC")
+	default:
+		query = query.Order("created_at DESC") // Default selalu ambil kata yang paling baru diinput
 	}
 
 	// 4. Terapkan Limit dan Tarik Datanya beserta relasinya
@@ -76,18 +70,17 @@ func (r *quizRepository) GenerateQuestions(c context.Context, userID string, fil
 
 func (r *quizRepository) SaveQuizHistory(c context.Context, session *entity.QuizHistory) error {
 	return r.db.WithContext(c).Transaction(func(tx *gorm.DB) error {
-		// 1. Simpan Header (Update atau Create baru)
-		if err := tx.Save(session).Error; err != nil {
+		// 1. Simpan Header (Gunakan Omit agar GORM tidak menyimpan relasi Details secara otomatis)
+		if err := tx.Omit("Details").Save(session).Error; err != nil {
 			return err
 		}
 
 		// 2. HAPUS SEMUA DETAIL LAMA YANG TERKAIT DENGAN SESSION INI
-		// Kita pakai Exec agar benar-benar mengeksekusi perintah SQL delete
 		if err := tx.Exec("DELETE FROM quiz_details WHERE quiz_history_id = ?", session.ID).Error; err != nil {
 			return err
 		}
 
-		// 3. Masukkan Detail Baru (Gunakan Create dengan slice)
+		// 3. Masukkan Detail Baru secara manual
 		if len(session.Details) > 0 {
 			if err := tx.Create(&session.Details).Error; err != nil {
 				return err

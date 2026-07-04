@@ -37,6 +37,7 @@ type QuizHistoryResponse struct {
 	CorrectAnswers   int                `json:"correct_answers"`
 	IncorrectAnswers int                `json:"incorrect_answers"`
 	Score            float64            `json:"score"`
+	Status           string               `json:"status"`
 	CreatedAt        string             `json:"created_at"`
 	Details          []QuizDetailResponse `json:"details,omitempty"` // omitempty agar null untuk user Free
 }
@@ -47,3 +48,5 @@ type QuizDetailResponse struct {
 	Translation string `json:"translation"`
 	IsCorrect   bool   `json:"is_correct"`
 }
+
+
