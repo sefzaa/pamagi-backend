@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"strings"
 	"pamagi/domain"
 	"pamagi/domain/dto"
 	"pamagi/domain/entity"
@@ -36,36 +37,60 @@ func (r *wordRepository) Create(c context.Context, word *entity.Word, categoryID
 // 1. Ubah fungsi Fetch
 func (r *wordRepository) Fetch(c context.Context, userID string, filter dto.WordFilterRequest) ([]entity.Word, int64, error) {
 	var words []entity.Word
-	var total int64 // Variabel untuk menyimpan total item
+	var total int64 
 	
-	// Query dasar
 	query := r.db.WithContext(c).Model(&entity.Word{}).Where("user_id = ?", userID)
 
-	// --- Terapkan Filter ---
-	if filter.PartOfSpeech != "" { query = query.Where("part_of_speech = ?", filter.PartOfSpeech) }
+	// --- PERBAIKAN FILTER MULTI-SELECT ---
+	
+	// 1. Filter Part of Speech (Mendukung comma-separated)
+	if filter.PartOfSpeech != "" { 
+		posList := strings.Split(filter.PartOfSpeech, ",")
+		query = query.Where("part_of_speech IN ?", posList) 
+	}
+
 	if filter.IsFavorite != nil { query = query.Where("is_favorite = ?", *filter.IsFavorite) }
 	if filter.IsBookmarked != nil { query = query.Where("is_bookmarked = ?", *filter.IsBookmarked) }
 	
-	// --- Perbaikan Filter CategoryID ---
-	if filter.CategoryID == "uncategorized" {
-		// Jika dicari uncategorized, filter kata yang tidak ada relasinya di tabel pivot (NULL)
-		query = query.Joins("LEFT JOIN word_categories wc ON wc.word_id = words.id").Where("wc.word_id IS NULL")
-	} else if filter.CategoryID != "" {
-		// Jika ID kategori normal, lakukan JOIN biasa
-		query = query.Joins("JOIN word_categories wc ON wc.word_id = words.id").Where("wc.category_id = ?", filter.CategoryID)
+	// 2. Filter Category ID (Mendukung comma-separated & kombinasi Uncategorized)
+	if filter.CategoryID != "" {
+		catList := strings.Split(filter.CategoryID, ",")
+		hasUncategorized := false
+		var validIDs []string
+
+		// Pisahkan mana ID asli dan mana yang "uncategorized"
+		for _, id := range catList {
+			if id == "uncategorized" {
+				hasUncategorized = true
+			} else {
+				validIDs = append(validIDs, id)
+			}
+		}
+
+		if hasUncategorized && len(validIDs) > 0 {
+			// Jika user filter kategori tertentu + uncategorized sekaligus
+			query = query.Joins("LEFT JOIN word_categories wc ON wc.word_id = words.id").
+				Where("wc.category_id IN ? OR wc.word_id IS NULL", validIDs)
+		} else if hasUncategorized {
+			// Jika user cuma filter uncategorized
+			query = query.Joins("LEFT JOIN word_categories wc ON wc.word_id = words.id").
+				Where("wc.word_id IS NULL")
+		} else if len(validIDs) > 0 {
+			// Jika user cuma filter kategori normal (satu atau banyak)
+			query = query.Joins("JOIN word_categories wc ON wc.word_id = words.id").
+				Where("wc.category_id IN ?", validIDs)
+		}
 	}
-	// -----------------------------------
+	// -------------------------------------
 
 	if filter.StartDate != "" && filter.EndDate != "" {
 		query = query.Where("DATE(words.created_at) BETWEEN ? AND ?", filter.StartDate, filter.EndDate)
 	}
 
-	// HITUNG TOTAL DATA SEBELUM DI-LIMIT
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	// --- Terapkan Sorting ---
 	switch filter.SortBy {
 	case "oldest": query = query.Order("words.created_at ASC")
 	case "a_z": query = query.Order("words.russian_word ASC")
@@ -73,11 +98,10 @@ func (r *wordRepository) Fetch(c context.Context, userID string, filter dto.Word
 	default: query = query.Order("words.created_at DESC")
 	}
 
-	// AMBIL DATA DENGAN PRELOAD DAN LIMIT
 	offset := (filter.Page - 1) * filter.Limit
 	err := query.Preload("Categories").Preload("Examples").Limit(filter.Limit).Offset(offset).Find(&words).Error
 	
-	return words, total, err // Kembalikan totalnya juga
+	return words, total, err 
 }
 
 // 2. Tambahkan fungsi baru untuk menghitung Part of Speech
