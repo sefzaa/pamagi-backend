@@ -41,13 +41,21 @@ func (r *wordRepository) Fetch(c context.Context, userID string, filter dto.Word
 	// Query dasar
 	query := r.db.WithContext(c).Model(&entity.Word{}).Where("user_id = ?", userID)
 
-	// --- Terapkan Filter (Sama seperti sebelumnya) ---
+	// --- Terapkan Filter ---
 	if filter.PartOfSpeech != "" { query = query.Where("part_of_speech = ?", filter.PartOfSpeech) }
 	if filter.IsFavorite != nil { query = query.Where("is_favorite = ?", *filter.IsFavorite) }
 	if filter.IsBookmarked != nil { query = query.Where("is_bookmarked = ?", *filter.IsBookmarked) }
-	if filter.CategoryID != "" {
+	
+	// --- Perbaikan Filter CategoryID ---
+	if filter.CategoryID == "uncategorized" {
+		// Jika dicari uncategorized, filter kata yang tidak ada relasinya di tabel pivot (NULL)
+		query = query.Joins("LEFT JOIN word_categories wc ON wc.word_id = words.id").Where("wc.word_id IS NULL")
+	} else if filter.CategoryID != "" {
+		// Jika ID kategori normal, lakukan JOIN biasa
 		query = query.Joins("JOIN word_categories wc ON wc.word_id = words.id").Where("wc.category_id = ?", filter.CategoryID)
 	}
+	// -----------------------------------
+
 	if filter.StartDate != "" && filter.EndDate != "" {
 		query = query.Where("DATE(words.created_at) BETWEEN ? AND ?", filter.StartDate, filter.EndDate)
 	}
@@ -57,7 +65,7 @@ func (r *wordRepository) Fetch(c context.Context, userID string, filter dto.Word
 		return nil, 0, err
 	}
 
-	// --- Terapkan Sorting (Sama seperti sebelumnya) ---
+	// --- Terapkan Sorting ---
 	switch filter.SortBy {
 	case "oldest": query = query.Order("words.created_at ASC")
 	case "a_z": query = query.Order("words.russian_word ASC")
