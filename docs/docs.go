@@ -1466,6 +1466,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "subscription_status": {
+                    "type": "string"
+                },
                 "username": {
                     "type": "string"
                 }

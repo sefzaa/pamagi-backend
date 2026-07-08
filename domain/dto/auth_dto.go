@@ -30,4 +30,5 @@ type UserResponse struct {
 	Name     string `json:"name"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
+	SubscriptionStatus string `json:"subscription_status"`
 }

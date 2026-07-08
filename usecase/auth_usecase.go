@@ -61,7 +61,7 @@ func (u *authUsecase) Register(c context.Context, req *dto.RegisterRequest) (dto
 	}
 
 	// Setelah sukses buat user, langsung panggil logika login otomatis
-	return u.generateTokensAndStore(c, userId, user.Name, user.Username, user.Email)
+	return u.generateTokensAndStore(c, userId, user.Name, user.Username, user.Email, user.SubscriptionStatus)
 }
 
 func (u *authUsecase) Login(c context.Context, req *dto.LoginRequest) (dto.AuthResponse, error) {
@@ -75,7 +75,7 @@ func (u *authUsecase) Login(c context.Context, req *dto.LoginRequest) (dto.AuthR
 		return dto.AuthResponse{}, errors.New("kredensial tidak valid")
 	}
 
-	return u.generateTokensAndStore(c, user.ID, user.Name, user.Username, user.Email)
+	return u.generateTokensAndStore(c, user.ID, user.Name, user.Username, user.Email, user.SubscriptionStatus)
 }
 
 // Helper internal untuk generate token dan simpan ke Redis
@@ -107,6 +107,7 @@ func (u *authUsecase) generateTokensAndStore(c context.Context, userId, name, us
 			Name:     name,
 			Username: username,
 			Email:    email,
+			SubscriptionStatus: subscriptionStatus,
 		},
 	}, nil
 }
