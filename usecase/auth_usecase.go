@@ -79,8 +79,7 @@ func (u *authUsecase) Login(c context.Context, req *dto.LoginRequest) (dto.AuthR
 }
 
 // Helper internal untuk generate token dan simpan ke Redis
-func (u *authUsecase) generateTokensAndStore(c context.Context, userId, name, username, email string) (dto.AuthResponse, error) {
-	// 1. Buat Access Token (15 Menit)
+func (u *authUsecase) generateTokensAndStore(c context.Context, userId, name, username, email, subscriptionStatus string) (dto.AuthResponse, error) {	// 1. Buat Access Token (15 Menit)
 	accessToken, err := tokenutil.CreateAccessToken(userId, name, u.env.AccessTokenSecret, 15)
 	if err != nil {
 		return dto.AuthResponse{}, err
