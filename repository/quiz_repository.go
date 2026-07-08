@@ -63,7 +63,7 @@ func (r *quizRepository) GenerateQuestions(c context.Context, userID string, fil
 	}
 
 	// 4. Terapkan Limit dan Tarik Datanya beserta relasinya
-	err := query.Preload("Categories").Preload("Examples").Limit(limit).Find(&words).Error
+	err := query.Preload("Categories").Preload("Examples").Limit(limit).Find(&words).Error	
 	return words, err
 }
 

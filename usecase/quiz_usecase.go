@@ -20,27 +20,29 @@ func NewQuizUsecase(quizRepo domain.QuizRepository) domain.QuizUsecase {
 }
 
 func (u *quizUsecase) GenerateFlashcards(c context.Context, userID string, req *dto.GenerateFlashcardRequest) ([]dto.WordResponse, error) {
-	isPremium := false 
-	limit := 20
-	if isPremium {
-		limit = 100
-	}
+    // 1. Definisikan status premium (Ini contoh, nanti Anda bisa ambil dari database/session)
+    isPremium := false 
 
-	// 1. Tarik kata dari database (Data akan selalu 20 terbaru jika otomatis/tidak ada sort lain)
-	words, err := u.quizRepo.GenerateQuestions(c, userID, req, limit)
-	if err != nil {
-		return nil, err
-	}
+    // 2. Tentukan limit
+    limit := req.TotalQuestions
+    if limit > 20 && !isPremium {
+        limit = 20 
+    }
 
-	// 2. ACAK URUTAN SLICE DI SINI
-	// Buat seed agar hasil acakan selalu berbeda setiap fungsi dipanggil
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	r.Shuffle(len(words), func(i, j int) {
-		words[i], words[j] = words[j], words[i]
-	})
+    // 3. Panggil repo (Cukup satu kali saja)
+    words, err := u.quizRepo.GenerateQuestions(c, userID, req, limit)
+    if err != nil {
+        return nil, err
+    }
+
+    // 4. ACAK URUTAN SLICE
+    r := rand.New(rand.NewSource(time.Now().UnixNano()))
+    r.Shuffle(len(words), func(i, j int) {
+        words[i], words[j] = words[j], words[i]
+    })
 
 	// Mapping Entity ke DTO WordResponse (Bisa pakai struktur response Word yang sudah ada)
-var responses []dto.WordResponse
+	var responses []dto.WordResponse
 	for _, w := range words {
 		var catRes []dto.CategoryRes
 		for _, cat := range w.Categories {

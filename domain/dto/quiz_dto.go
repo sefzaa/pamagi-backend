@@ -10,6 +10,7 @@ type GenerateFlashcardRequest struct {
 	StartDate    string   `json:"start_date"` // Format: YYYY-MM-DD
 	EndDate      string   `json:"end_date"`
 	WordIDs      []string `json:"word_ids"`   // Jika pilih manual satu per satu
+	TotalQuestions int `json:"total_questions" binding:"required,min=1,max=100"`
 	
 	SortBy       string   `json:"sort_by"`    // Opsi: "name_asc", "name_desc", "created_asc", "created_desc", "updated_desc"
 }

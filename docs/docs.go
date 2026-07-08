@@ -1149,7 +1149,8 @@ const docTemplate = `{
         "dto.GenerateFlashcardRequest": {
             "type": "object",
             "required": [
-                "filter_type"
+                "filter_type",
+                "total_questions"
             ],
             "properties": {
                 "category_ids": {
@@ -1179,6 +1180,11 @@ const docTemplate = `{
                 "start_date": {
                     "description": "Format: YYYY-MM-DD",
                     "type": "string"
+                },
+                "total_questions": {
+                    "type": "integer",
+                    "maximum": 100,
+                    "minimum": 1
                 },
                 "word_ids": {
                     "description": "Jika pilih manual satu per satu",

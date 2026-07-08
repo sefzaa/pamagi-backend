@@ -107,6 +107,10 @@ definitions:
       start_date:
         description: 'Format: YYYY-MM-DD'
         type: string
+      total_questions:
+        maximum: 100
+        minimum: 1
+        type: integer
       word_ids:
         description: Jika pilih manual satu per satu
         items:
@@ -114,6 +118,7 @@ definitions:
         type: array
     required:
     - filter_type
+    - total_questions
     type: object
   dto.LoginRequest:
     properties:
