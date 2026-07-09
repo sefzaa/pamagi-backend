@@ -211,6 +211,10 @@ definitions:
     type: object
   dto.QuizDetailResponse:
     properties:
+      examples:
+        items:
+          $ref: '#/definitions/dto.WordExampleRes'
+        type: array
       is_correct:
         type: boolean
       russian_word:

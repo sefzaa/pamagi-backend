@@ -20,7 +20,7 @@ type QuizDetail struct {
 	ID            string `gorm:"type:varchar(36);primaryKey"`
 	QuizHistoryID string `gorm:"type:varchar(36);not null"` // Ubah foreign key-nya
 	WordID        string `gorm:"type:varchar(36);not null"`
-	IsCorrect     bool   `gorm:"not null"`
+	IsCorrect 	 *bool 	 `gorm:"column:is_correct"`
 
 	Word Word `gorm:"foreignKey:WordID"`
 }

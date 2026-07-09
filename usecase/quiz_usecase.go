@@ -51,7 +51,9 @@ func (u *quizUsecase) GenerateFlashcards(c context.Context, userID string, req *
 		var exRes []dto.WordExampleRes
 		for _, ex := range w.Examples {
 			exRes = append(exRes, dto.WordExampleRes{
-				ID: ex.ID, RussianSentence: ex.RussianSentence, TranslatedSentence: ex.TranslatedSentence,
+				ID: ex.ID, 
+				RussianSentence: ex.RussianSentence, 
+				TranslatedSentence: ex.TranslatedSentence,
 			})
 		}
 		responses = append(responses, dto.WordResponse{
@@ -108,7 +110,7 @@ func (u *quizUsecase) GetQuizHistories(c context.Context, userID string) ([]dto.
 	}
 
 	// TODO: Cek status Premium user
-	isPremium := false 
+	isPremium := true // Diubah ke true dulu untuk testing review kalimat
 
 	var responses []dto.QuizHistoryResponse
 	for _, s := range sessions {
@@ -117,11 +119,24 @@ func (u *quizUsecase) GetQuizHistories(c context.Context, userID string) ([]dto.
 		// Jika Premium, masukkan data salah/benarnya. Jika Free, biarkan kosong.
 		if isPremium {
 			for _, d := range s.Details {
+				
+				// === BAGIAN BARU: Ambil dan petakan contoh kalimat (Examples) ===
+				var exRes []dto.WordExampleRes
+				for _, ex := range d.Word.Examples {
+					exRes = append(exRes, dto.WordExampleRes{
+						ID:                 ex.ID,
+						RussianSentence:    ex.RussianSentence,
+						TranslatedSentence: ex.TranslatedSentence,
+					})
+				}
+				// ============================================================
+
 				detailRes = append(detailRes, dto.QuizDetailResponse{
 					WordID:      d.WordID,
 					RussianWord: d.Word.RussianWord,
 					Translation: d.Word.Translation,
-					IsCorrect:   d.IsCorrect,
+					IsCorrect:   d.IsCorrect, // Pastikan tipe data di DTO sudah *bool jika ingin mendukung null
+					Examples:    exRes,       // === MASUKKAN KE SINI ===
 				})
 			}
 		}

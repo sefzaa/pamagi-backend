@@ -28,7 +28,7 @@ type SubmitQuizRequest struct {
 
 type SubmitQuizDetail struct {
 	WordID    string `json:"word_id" binding:"required"`
-	IsCorrect bool   `json:"is_correct"`
+	IsCorrect *bool  `json:"is_correct"`
 }
 
 // 3. Response untuk histori kuis
@@ -47,7 +47,8 @@ type QuizDetailResponse struct {
 	WordID      string `json:"word_id"`
 	RussianWord string `json:"russian_word"`
 	Translation string `json:"translation"`
-	IsCorrect   bool   `json:"is_correct"`
+	IsCorrect   *bool              `json:"is_correct"`
+	Examples    []WordExampleRes     `json:"examples"`
 }
 
 

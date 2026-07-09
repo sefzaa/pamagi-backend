@@ -1331,6 +1331,12 @@ const docTemplate = `{
         "dto.QuizDetailResponse": {
             "type": "object",
             "properties": {
+                "examples": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.WordExampleRes"
+                    }
+                },
                 "is_correct": {
                     "type": "boolean"
                 },

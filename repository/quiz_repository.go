@@ -92,9 +92,9 @@ func (r *quizRepository) SaveQuizHistory(c context.Context, session *entity.Quiz
 
 
 func (r *quizRepository) GetHistories(c context.Context, userID string) ([]entity.QuizHistory, error) {
-	var sessions []entity.QuizHistory // Ubah di sini
+	var sessions []entity.QuizHistory
 	err := r.db.WithContext(c).Where("user_id = ?", userID).
-		Preload("Details.Word"). 
+		Preload("Details.Word.Examples"). // UBAH BAGIAN INI
 		Order("created_at DESC").
 		Find(&sessions).Error
 	return sessions, err
