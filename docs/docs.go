@@ -1340,6 +1340,10 @@ const docTemplate = `{
                 "is_correct": {
                     "type": "boolean"
                 },
+                "part_of_speech": {
+                    "description": "\u003c-- TAMBAHKAN INI",
+                    "type": "string"
+                },
                 "russian_word": {
                     "type": "string"
                 },

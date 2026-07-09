@@ -217,6 +217,9 @@ definitions:
         type: array
       is_correct:
         type: boolean
+      part_of_speech:
+        description: <-- TAMBAHKAN INI
+        type: string
       russian_word:
         type: string
       translation:

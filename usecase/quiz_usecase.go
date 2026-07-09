@@ -135,6 +135,7 @@ func (u *quizUsecase) GetQuizHistories(c context.Context, userID string) ([]dto.
 					WordID:      d.WordID,
 					RussianWord: d.Word.RussianWord,
 					Translation: d.Word.Translation,
+					PartOfSpeech: d.Word.PartOfSpeech,
 					IsCorrect:   d.IsCorrect, // Pastikan tipe data di DTO sudah *bool jika ingin mendukung null
 					Examples:    exRes,       // === MASUKKAN KE SINI ===
 				})

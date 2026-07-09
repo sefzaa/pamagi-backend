@@ -47,6 +47,7 @@ type QuizDetailResponse struct {
 	WordID      string `json:"word_id"`
 	RussianWord string `json:"russian_word"`
 	Translation string `json:"translation"`
+	PartOfSpeech string             `json:"part_of_speech"` // <-- TAMBAHKAN INI
 	IsCorrect   *bool              `json:"is_correct"`
 	Examples    []WordExampleRes     `json:"examples"`
 }
