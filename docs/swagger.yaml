@@ -56,14 +56,18 @@ definitions:
         items:
           type: string
         type: array
+      examples:
+        items:
+          $ref: '#/definitions/dto.WordExampleReq'
+        maxItems: 3
+        type: array
       native_word:
         type: string
       part_of_speech:
         type: string
       targets:
-        description: Array bahasa asing yang diinput (maks 2)
         items:
-          $ref: '#/definitions/dto.WordTargetRequest'
+          $ref: '#/definitions/dto.WordTargetReq'
         maxItems: 2
         minItems: 1
         type: array
@@ -72,15 +76,24 @@ definitions:
     - part_of_speech
     - targets
     type: object
-  dto.ExampleRequest:
+  dto.ExampleTargetReq:
     properties:
-      native_sentence:
+      language_code:
         type: string
-      target_sentence:
+      sentence:
         type: string
     required:
-    - native_sentence
-    - target_sentence
+    - language_code
+    - sentence
+    type: object
+  dto.ExampleTargetRes:
+    properties:
+      id:
+        type: string
+      language_code:
+        type: string
+      sentence:
+        type: string
     type: object
   dto.GenerateFlashcardRequest:
     properties:
@@ -217,16 +230,14 @@ definitions:
       is_correct:
         type: boolean
       native_word:
-        description: PENGGANTI Translation
         type: string
       part_of_speech:
         type: string
-      target_language_code:
-        description: TAMBAHAN
-        type: string
-      target_word:
-        description: PENGGANTI RussianWord
-        type: string
+      targets:
+        description: 'TAMBAHAN: Menampung array bahasa (Rusia, Inggris, dll)'
+        items:
+          $ref: '#/definitions/dto.WordTargetRes'
+        type: array
       word_id:
         type: string
     type: object
@@ -359,19 +370,23 @@ definitions:
         type: array
       examples:
         items:
-          $ref: '#/definitions/dto.ExampleRequest'
+          $ref: '#/definitions/dto.WordExampleReq'
         maxItems: 3
         type: array
       native_word:
         type: string
       part_of_speech:
         type: string
-      target_word:
-        type: string
+      targets:
+        items:
+          $ref: '#/definitions/dto.WordTargetReq'
+        maxItems: 2
+        minItems: 1
+        type: array
     required:
     - native_word
     - part_of_speech
-    - target_word
+    - targets
     type: object
   dto.UserResponse:
     properties:
@@ -396,19 +411,32 @@ definitions:
       username:
         type: string
     type: object
+  dto.WordExampleReq:
+    properties:
+      native_sentence:
+        type: string
+      target_sentences:
+        items:
+          $ref: '#/definitions/dto.ExampleTargetReq'
+        type: array
+    required:
+    - native_sentence
+    - target_sentences
+    type: object
   dto.WordExampleRes:
     properties:
       id:
         type: string
       native_sentence:
         type: string
-      target_sentence:
-        type: string
+      target_sentences:
+        items:
+          $ref: '#/definitions/dto.ExampleTargetRes'
+        type: array
     type: object
   dto.WordPaginationResponse:
     properties:
       data:
-        description: Data tetap menggunakan struktur list kata yang lama
         items:
           $ref: '#/definitions/dto.WordResponse'
         type: array
@@ -429,27 +457,19 @@ definitions:
         type: array
       id:
         type: string
-      is_bookmarked:
-        type: boolean
       is_favorite:
         type: boolean
       native_word:
         type: string
       part_of_speech:
         type: string
-      target_language_code:
-        type: string
-      target_word:
-        type: string
-    type: object
-  dto.WordTargetRequest:
-    properties:
-      examples:
-        description: Maksimal 3 contoh kalimat per bahasa target
+      targets:
         items:
-          $ref: '#/definitions/dto.ExampleRequest'
-        maxItems: 3
+          $ref: '#/definitions/dto.WordTargetRes'
         type: array
+    type: object
+  dto.WordTargetReq:
+    properties:
       language_code:
         type: string
       target_word:
@@ -457,6 +477,15 @@ definitions:
     required:
     - language_code
     - target_word
+    type: object
+  dto.WordTargetRes:
+    properties:
+      id:
+        type: string
+      language_code:
+        type: string
+      target_word:
+        type: string
     type: object
   dto.WordTypeCountResponse:
     properties:
@@ -1096,27 +1125,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Edit Kosakata
-      tags:
-      - Words
-  /words/{id}/bookmark:
-    patch:
-      description: Menandai atau menghapus tanda bookmark pada suatu kata
-      parameters:
-      - description: ID Kosakata
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/domain.SuccessResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Ubah Status Bookmark
       tags:
       - Words
   /words/{id}/favorite:

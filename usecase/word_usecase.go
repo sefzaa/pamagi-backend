@@ -17,67 +17,97 @@ func NewWordUsecase(wordRepo domain.WordRepository) domain.WordUsecase {
 }
 
 func (u *wordUsecase) CreateWord(c context.Context, userID string, req *dto.CreateWordRequest) error {
-	var words []*entity.Word
+	wordID := uuid.New().String()
 
-	// Looping berdasarkan jumlah bahasa yang dipelajari (Maksimal 2)
-	for _, target := range req.Targets {
-		wordID := uuid.New().String()
-		var examples []entity.WordExample
-		
-		// Looping contoh kalimat (Maksimal 3 dari DTO)
-		for _, exReq := range target.Examples {
-			examples = append(examples, entity.WordExample{
-				ID:             uuid.New().String(),
-				WordID:         wordID,
-				TargetSentence: exReq.TargetSentence,
-				NativeSentence: exReq.NativeSentence,
-			})
-		}
-
-		words = append(words, &entity.Word{
-			ID:                 wordID,
-			UserID:             userID,
-			TargetLanguageCode: target.LanguageCode,
-			TargetWord:         target.TargetWord,
-			NativeWord:         req.NativeWord, // Terjemahan inti dipakai berulang
-			PartOfSpeech:       req.PartOfSpeech,
-			Examples:           examples,
+	// 1. Looping Anak (Target Bahasa)
+	var targets []entity.WordTarget
+	for _, t := range req.Targets {
+		targets = append(targets, entity.WordTarget{
+			ID:           uuid.New().String(),
+			WordID:       wordID,
+			LanguageCode: t.LanguageCode,
+			TargetWord:   t.TargetWord,
 		})
 	}
 
-	// Kirim array words ke repository untuk di-save dalam satu transaksi
-	return u.wordRepo.Create(c, words, req.CategoryIDs)
+	// 2. Looping Induk Contoh Kalimat & Cucu (Terjemahan Kalimat)
+	var examples []entity.WordExample
+	for _, exReq := range req.Examples {
+		exID := uuid.New().String()
+		
+		var exTargets []entity.WordExampleTarget
+		for _, extReq := range exReq.TargetSentences {
+			exTargets = append(exTargets, entity.WordExampleTarget{
+				ID:             uuid.New().String(),
+				WordExampleID:  exID,
+				LanguageCode:   extReq.LanguageCode,
+				TargetSentence: extReq.Sentence,
+			})
+		}
+		
+		examples = append(examples, entity.WordExample{
+			ID:             exID,
+			WordID:         wordID,
+			NativeSentence: exReq.NativeSentence,
+			Targets:        exTargets,
+		})
+	}
+
+	// 3. Bungkus menjadi 1 Konsep Utama (Induk)
+	word := &entity.Word{
+		ID:           wordID,
+		UserID:       userID,
+		NativeWord:   req.NativeWord,
+		PartOfSpeech: req.PartOfSpeech,
+		Targets:      targets,
+		Examples:     examples,
+	}
+
+	return u.wordRepo.Create(c, word, req.CategoryIDs)
 }
 
 // Helper untuk mapping Entity ke DTO
 func mapToWordResponse(w entity.Word) dto.WordResponse {
 	var catRes []dto.CategoryRes
 	for _, cat := range w.Categories {
-		catRes = append(catRes, dto.CategoryRes{
-			ID:   cat.ID,
-			Name: cat.Name,
-			Icon: cat.Icon,
+		catRes = append(catRes, dto.CategoryRes{ID: cat.ID, Name: cat.Name, Icon: cat.Icon})
+	}
+
+	var targetRes []dto.WordTargetRes
+	for _, t := range w.Targets {
+		targetRes = append(targetRes, dto.WordTargetRes{
+			ID:           t.ID,
+			LanguageCode: t.LanguageCode,
+			TargetWord:   t.TargetWord,
 		})
 	}
+
 	var exRes []dto.WordExampleRes
 	for _, ex := range w.Examples {
+		var extRes []dto.ExampleTargetRes
+		for _, ext := range ex.Targets {
+			extRes = append(extRes, dto.ExampleTargetRes{
+				ID:           ext.ID,
+				LanguageCode: ext.LanguageCode,
+				Sentence:     ext.TargetSentence,
+			})
+		}
 		exRes = append(exRes, dto.WordExampleRes{
-			ID:                 ex.ID,
-			TargetSentence:     ex.TargetSentence, // PENGGANTI RussianSentence
-			NativeSentence:     ex.NativeSentence, // PENGGANTI TranslatedSentence
+			ID:              ex.ID,
+			NativeSentence:  ex.NativeSentence,
+			TargetSentences: extRes,
 		})
 	}
+
 	return dto.WordResponse{
-		ID:                 w.ID,
-		TargetLanguageCode: w.TargetLanguageCode,  // TAMBAHAN
-		TargetWord:         w.TargetWord,          // PENGGANTI RussianWord
-		NativeWord:         w.NativeWord,          // PENGGANTI Translation
-		PartOfSpeech:       w.PartOfSpeech,
-		IsFavorite:         w.IsFavorite,
-		IsBookmarked:       w.IsBookmarked,
-		CreatedAt:          w.CreatedAt.Format("2006-01-02 15:04:05"),
-		Categories:         catRes,
-		Examples:           exRes,
+		ID:           w.ID,
+		NativeWord:   w.NativeWord,
+		PartOfSpeech: w.PartOfSpeech,
+		IsFavorite:   w.IsFavorite,
+		CreatedAt:    w.CreatedAt.Format("2006-01-02 15:04:05"),
+		Categories:   catRes,
+		Targets:      targetRes,
+		Examples:     exRes,
 	}
 }
 
@@ -125,31 +155,48 @@ func (u *wordUsecase) ToggleFavorite(c context.Context, wordID string, userID st
 	return u.wordRepo.ToggleFavorite(c, wordID, userID)
 }
 
-func (u *wordUsecase) ToggleBookmark(c context.Context, wordID string, userID string) error {
-	return u.wordRepo.ToggleBookmark(c, wordID, userID)
-}
 
 func (u *wordUsecase) DeleteWord(c context.Context, wordID string, userID string) error {
 	return u.wordRepo.Delete(c, wordID, userID)
 }
 
 func (u *wordUsecase) UpdateWord(c context.Context, wordID string, userID string, req *dto.UpdateWordRequest) error {
+	var targets []entity.WordTarget
+	for _, t := range req.Targets {
+		targets = append(targets, entity.WordTarget{
+			ID:           uuid.New().String(),
+			WordID:       wordID,
+			LanguageCode: t.LanguageCode,
+			TargetWord:   t.TargetWord,
+		})
+	}
+
 	var examples []entity.WordExample
 	for _, exReq := range req.Examples {
+		exID := uuid.New().String()
+		var exTargets []entity.WordExampleTarget
+		for _, extReq := range exReq.TargetSentences {
+			exTargets = append(exTargets, entity.WordExampleTarget{
+				ID:             uuid.New().String(),
+				WordExampleID:  exID,
+				LanguageCode:   extReq.LanguageCode,
+				TargetSentence: extReq.Sentence,
+			})
+		}
 		examples = append(examples, entity.WordExample{
-			ID:             uuid.New().String(),
+			ID:             exID,
 			WordID:         wordID,
-			TargetSentence: exReq.TargetSentence,
 			NativeSentence: exReq.NativeSentence,
+			Targets:        exTargets,
 		})
 	}
 
 	word := &entity.Word{
 		ID:           wordID,
 		UserID:       userID,
-		TargetWord:   req.TargetWord,
 		NativeWord:   req.NativeWord,
 		PartOfSpeech: req.PartOfSpeech,
+		Targets:      targets,
 		Examples:     examples,
 	}
 

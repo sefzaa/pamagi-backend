@@ -1022,40 +1022,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/words/{id}/bookmark": {
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Menandai atau menghapus tanda bookmark pada suatu kata",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Words"
-                ],
-                "summary": "Ubah Status Bookmark",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "ID Kosakata",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/domain.SuccessResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/words/{id}/favorite": {
             "patch": {
                 "security": [
@@ -1183,6 +1149,13 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "examples": {
+                    "type": "array",
+                    "maxItems": 3,
+                    "items": {
+                        "$ref": "#/definitions/dto.WordExampleReq"
+                    }
+                },
                 "native_word": {
                     "type": "string"
                 },
@@ -1190,27 +1163,40 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "targets": {
-                    "description": "Array bahasa asing yang diinput (maks 2)",
                     "type": "array",
                     "maxItems": 2,
                     "minItems": 1,
                     "items": {
-                        "$ref": "#/definitions/dto.WordTargetRequest"
+                        "$ref": "#/definitions/dto.WordTargetReq"
                     }
                 }
             }
         },
-        "dto.ExampleRequest": {
+        "dto.ExampleTargetReq": {
             "type": "object",
             "required": [
-                "native_sentence",
-                "target_sentence"
+                "language_code",
+                "sentence"
             ],
             "properties": {
-                "native_sentence": {
+                "language_code": {
                     "type": "string"
                 },
-                "target_sentence": {
+                "sentence": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ExampleTargetRes": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "language_code": {
+                    "type": "string"
+                },
+                "sentence": {
                     "type": "string"
                 }
             }
@@ -1410,19 +1396,17 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "native_word": {
-                    "description": "PENGGANTI Translation",
                     "type": "string"
                 },
                 "part_of_speech": {
                     "type": "string"
                 },
-                "target_language_code": {
-                    "description": "TAMBAHAN",
-                    "type": "string"
-                },
-                "target_word": {
-                    "description": "PENGGANTI RussianWord",
-                    "type": "string"
+                "targets": {
+                    "description": "TAMBAHAN: Menampung array bahasa (Rusia, Inggris, dll)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.WordTargetRes"
+                    }
                 },
                 "word_id": {
                     "type": "string"
@@ -1611,7 +1595,7 @@ const docTemplate = `{
             "required": [
                 "native_word",
                 "part_of_speech",
-                "target_word"
+                "targets"
             ],
             "properties": {
                 "category_ids": {
@@ -1624,7 +1608,7 @@ const docTemplate = `{
                     "type": "array",
                     "maxItems": 3,
                     "items": {
-                        "$ref": "#/definitions/dto.ExampleRequest"
+                        "$ref": "#/definitions/dto.WordExampleReq"
                     }
                 },
                 "native_word": {
@@ -1633,8 +1617,13 @@ const docTemplate = `{
                 "part_of_speech": {
                     "type": "string"
                 },
-                "target_word": {
-                    "type": "string"
+                "targets": {
+                    "type": "array",
+                    "maxItems": 2,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/dto.WordTargetReq"
+                    }
                 }
             }
         },
@@ -1673,6 +1662,24 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.WordExampleReq": {
+            "type": "object",
+            "required": [
+                "native_sentence",
+                "target_sentences"
+            ],
+            "properties": {
+                "native_sentence": {
+                    "type": "string"
+                },
+                "target_sentences": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ExampleTargetReq"
+                    }
+                }
+            }
+        },
         "dto.WordExampleRes": {
             "type": "object",
             "properties": {
@@ -1682,8 +1689,11 @@ const docTemplate = `{
                 "native_sentence": {
                     "type": "string"
                 },
-                "target_sentence": {
-                    "type": "string"
+                "target_sentences": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ExampleTargetRes"
+                    }
                 }
             }
         },
@@ -1691,7 +1701,6 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "data": {
-                    "description": "Data tetap menggunakan struktur list kata yang lama",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.WordResponse"
@@ -1723,9 +1732,6 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "is_bookmarked": {
-                    "type": "boolean"
-                },
                 "is_favorite": {
                     "type": "boolean"
                 },
@@ -1735,7 +1741,22 @@ const docTemplate = `{
                 "part_of_speech": {
                     "type": "string"
                 },
-                "target_language_code": {
+                "targets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.WordTargetRes"
+                    }
+                }
+            }
+        },
+        "dto.WordTargetReq": {
+            "type": "object",
+            "required": [
+                "language_code",
+                "target_word"
+            ],
+            "properties": {
+                "language_code": {
                     "type": "string"
                 },
                 "target_word": {
@@ -1743,20 +1764,11 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.WordTargetRequest": {
+        "dto.WordTargetRes": {
             "type": "object",
-            "required": [
-                "language_code",
-                "target_word"
-            ],
             "properties": {
-                "examples": {
-                    "description": "Maksimal 3 contoh kalimat per bahasa target",
-                    "type": "array",
-                    "maxItems": 3,
-                    "items": {
-                        "$ref": "#/definitions/dto.ExampleRequest"
-                    }
+                "id": {
+                    "type": "string"
                 },
                 "language_code": {
                     "type": "string"

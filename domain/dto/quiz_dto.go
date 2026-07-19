@@ -44,13 +44,12 @@ type QuizHistoryResponse struct {
 }
 
 type QuizDetailResponse struct {
-	WordID             string           `json:"word_id"`
-	TargetLanguageCode string           `json:"target_language_code"` // TAMBAHAN
-	TargetWord         string           `json:"target_word"`          // PENGGANTI RussianWord
-	NativeWord         string           `json:"native_word"`          // PENGGANTI Translation
-	PartOfSpeech       string           `json:"part_of_speech"`
-	IsCorrect          *bool            `json:"is_correct"`
-	Examples           []WordExampleRes `json:"examples"`
+	WordID       string           `json:"word_id"`
+	NativeWord   string           `json:"native_word"`
+	PartOfSpeech string           `json:"part_of_speech"`
+	IsCorrect    *bool            `json:"is_correct"`
+	Targets      []WordTargetRes  `json:"targets"`  // TAMBAHAN: Menampung array bahasa (Rusia, Inggris, dll)
+	Examples     []WordExampleRes `json:"examples"`
 }
 
 

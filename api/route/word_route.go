@@ -30,5 +30,4 @@ func NewWordRouter(db *gorm.DB, protectedRouter *gin.RouterGroup) {
 
 	// Ubah PUT menjadi PATCH di sini
 	protectedRouter.PATCH("/words/:id/favorite", wordController.ToggleFavorite)
-	protectedRouter.PATCH("/words/:id/bookmark", wordController.ToggleBookmark)
 }

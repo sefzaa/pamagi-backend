@@ -20,52 +20,65 @@ func NewQuizUsecase(quizRepo domain.QuizRepository) domain.QuizUsecase {
 }
 
 func (u *quizUsecase) GenerateFlashcards(c context.Context, userID string, req *dto.GenerateFlashcardRequest) ([]dto.WordResponse, error) {
-    // 1. Definisikan status premium (Ini contoh, nanti Anda bisa ambil dari database/session)
     isPremium := false 
 
-    // 2. Tentukan limit
     limit := req.TotalQuestions
     if limit > 20 && !isPremium {
         limit = 20 
     }
 
-    // 3. Panggil repo (Cukup satu kali saja)
     words, err := u.quizRepo.GenerateQuestions(c, userID, req, limit)
     if err != nil {
         return nil, err
     }
 
-    // 4. ACAK URUTAN SLICE
     r := rand.New(rand.NewSource(time.Now().UnixNano()))
     r.Shuffle(len(words), func(i, j int) {
         words[i], words[j] = words[j], words[i]
     })
 
-	// Mapping Entity ke DTO WordResponse (Bisa pakai struktur response Word yang sudah ada)
 	var responses []dto.WordResponse
 	for _, w := range words {
 		var catRes []dto.CategoryRes
 		for _, cat := range w.Categories {
 			catRes = append(catRes, dto.CategoryRes{ID: cat.ID, Name: cat.Name})
 		}
-		var exRes []dto.WordExampleRes
-		for _, ex := range w.Examples {
-			exRes = append(exRes, dto.WordExampleRes{
-				ID: ex.ID, 
-				TargetSentence: ex.TargetSentence, 
-				NativeSentence: ex.NativeSentence,
+		
+		var targetRes []dto.WordTargetRes
+		for _, t := range w.Targets {
+			targetRes = append(targetRes, dto.WordTargetRes{
+				ID:           t.ID,
+				LanguageCode: t.LanguageCode,
+				TargetWord:   t.TargetWord,
 			})
 		}
+
+		var exRes []dto.WordExampleRes
+		for _, ex := range w.Examples {
+			var extRes []dto.ExampleTargetRes
+			for _, ext := range ex.Targets {
+				extRes = append(extRes, dto.ExampleTargetRes{
+					ID:           ext.ID,
+					LanguageCode: ext.LanguageCode,
+					Sentence:     ext.TargetSentence,
+				})
+			}
+			exRes = append(exRes, dto.WordExampleRes{
+				ID:              ex.ID,
+				NativeSentence:  ex.NativeSentence,
+				TargetSentences: extRes,
+			})
+		}
+
 		responses = append(responses, dto.WordResponse{
-			ID: w.ID, 
-			TargetLanguageCode: w.TargetLanguageCode, // Tambahan
-			TargetWord: w.TargetWord,                 // Ganti RussianWord
-			NativeWord: w.NativeWord,                 // Ganti Translation
+			ID:           w.ID, 
+			NativeWord:   w.NativeWord,
 			PartOfSpeech: w.PartOfSpeech, 
-			IsFavorite: w.IsFavorite,
-			CreatedAt: w.CreatedAt.Format("2006-01-02 15:04:05"),
-			Categories: catRes, 
-			Examples: exRes,
+			IsFavorite:   w.IsFavorite,
+			CreatedAt:    w.CreatedAt.Format("2006-01-02 15:04:05"),
+			Categories:   catRes,
+			Targets:      targetRes,
+			Examples:     exRes,
 		})
 	}
 
@@ -114,36 +127,48 @@ func (u *quizUsecase) GetQuizHistories(c context.Context, userID string) ([]dto.
 		return nil, err
 	}
 
-	// TODO: Cek status Premium user
-	isPremium := true // Diubah ke true dulu untuk testing review kalimat
+	isPremium := true 
 
 	var responses []dto.QuizHistoryResponse
 	for _, s := range sessions {
 		var detailRes []dto.QuizDetailResponse
 		
-		// Jika Premium, masukkan data salah/benarnya. Jika Free, biarkan kosong.
 		if isPremium {
 			for _, d := range s.Details {
 				
-				// === BAGIAN BARU: Ambil dan petakan contoh kalimat (Examples) ===
-				var exRes []dto.WordExampleRes
-				for _, ex := range d.Word.Examples {
-					exRes = append(exRes, dto.WordExampleRes{
-						ID:                 ex.ID,
-						TargetSentence:    ex.TargetSentence,
-						NativeSentence: ex.NativeSentence,
+				var targetRes []dto.WordTargetRes
+				for _, t := range d.Word.Targets {
+					targetRes = append(targetRes, dto.WordTargetRes{
+						ID:           t.ID,
+						LanguageCode: t.LanguageCode,
+						TargetWord:   t.TargetWord,
 					})
 				}
-				// ============================================================
+
+				var exRes []dto.WordExampleRes
+				for _, ex := range d.Word.Examples {
+					var extRes []dto.ExampleTargetRes
+					for _, ext := range ex.Targets {
+						extRes = append(extRes, dto.ExampleTargetRes{
+							ID:           ext.ID,
+							LanguageCode: ext.LanguageCode,
+							Sentence:     ext.TargetSentence,
+						})
+					}
+					exRes = append(exRes, dto.WordExampleRes{
+						ID:              ex.ID,
+						NativeSentence:  ex.NativeSentence,
+						TargetSentences: extRes,
+					})
+				}
 
 				detailRes = append(detailRes, dto.QuizDetailResponse{
-					WordID:             d.WordID,
-					TargetLanguageCode: d.Word.TargetLanguageCode, // Tambahan
-					TargetWord:         d.Word.TargetWord,         // Ganti
-					NativeWord:         d.Word.NativeWord,         // Ganti
-					PartOfSpeech:       d.Word.PartOfSpeech,
-					IsCorrect:          d.IsCorrect,
-					Examples:           exRes,
+					WordID:       d.WordID,
+					NativeWord:   d.Word.NativeWord,
+					PartOfSpeech: d.Word.PartOfSpeech,
+					IsCorrect:    d.IsCorrect,
+					Targets:      targetRes,
+					Examples:     exRes,
 				})
 			}
 		}

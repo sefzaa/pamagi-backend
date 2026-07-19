@@ -121,27 +121,6 @@ func (wc *WordController) ToggleFavorite(c *gin.Context) {
 	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Status favorit diperbarui"})
 }
 
-// ToggleBookmark godoc
-// @Summary Ubah Status Bookmark
-// @Description Menandai atau menghapus tanda bookmark pada suatu kata
-// @Tags Words
-// @Security ApiKeyAuth
-// @Produce json
-// @Param id path string true "ID Kosakata"
-// @Success 200 {object} domain.SuccessResponse
-// @Router /words/{id}/bookmark [patch]
-func (wc *WordController) ToggleBookmark(c *gin.Context) {
-	userID := c.GetString("x-user-id")
-	wordID := c.Param("id")
-
-	err := wc.WordUsecase.ToggleBookmark(c.Request.Context(), wordID, userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal merubah status bookmark"})
-		return
-	}
-
-	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Status bookmark diperbarui"})
-}
 
 // DeleteWord godoc
 // @Summary Hapus Kosakata

@@ -1,32 +1,45 @@
 package dto
 
-// 1. Request untuk Create Word
+// ==========================================
+// REQUEST: FORMAT JSON DARI FRONTEND
+// ==========================================
+
 type CreateWordRequest struct {
-	NativeWord   string              `json:"native_word" binding:"required"`
-	PartOfSpeech string              `json:"part_of_speech" binding:"required"`
-	CategoryIDs  []string            `json:"category_ids"`
-	Targets      []WordTargetRequest `json:"targets" binding:"required,min=1,max=2"` // Array bahasa asing yang diinput (maks 2)
+	NativeWord   string           `json:"native_word" binding:"required"`
+	PartOfSpeech string           `json:"part_of_speech" binding:"required"`
+	CategoryIDs  []string         `json:"category_ids"`
+	Targets      []WordTargetReq  `json:"targets" binding:"required,min=1,max=2"`
+	Examples     []WordExampleReq `json:"examples" binding:"max=3"`
 }
 
-type WordTargetRequest struct {
-	LanguageCode string           `json:"language_code" binding:"required"`
-	TargetWord   string           `json:"target_word" binding:"required"`
-	Examples     []ExampleRequest `json:"examples" binding:"max=3"` // Maksimal 3 contoh kalimat per bahasa target
+type WordTargetReq struct {
+	LanguageCode string `json:"language_code" binding:"required"`
+	TargetWord   string `json:"target_word" binding:"required"`
 }
 
-// Sub-request untuk contoh kalimat
-type ExampleRequest struct {
-	TargetSentence string `json:"target_sentence" binding:"required"`
-	NativeSentence string `json:"native_sentence" binding:"required"`
+type WordExampleReq struct {
+	NativeSentence string             `json:"native_sentence" binding:"required"`
+	TargetSentences []ExampleTargetReq `json:"target_sentences" binding:"required"`
 }
 
-// 2. Request untuk Filter GET /words (Pake Query Params)
+type ExampleTargetReq struct {
+	LanguageCode string `json:"language_code" binding:"required"`
+	Sentence     string `json:"sentence" binding:"required"`
+}
+
+type UpdateWordRequest struct {
+	NativeWord   string           `json:"native_word" binding:"required"`
+	PartOfSpeech string           `json:"part_of_speech" binding:"required"`
+	CategoryIDs  []string         `json:"category_ids"`
+	Targets      []WordTargetReq  `json:"targets" binding:"required,min=1,max=2"`
+	Examples     []WordExampleReq `json:"examples" binding:"max=3"`
+}
+
 type WordFilterRequest struct {
-	TargetLanguageCode string `form:"target_language_code"` // TAMBAHAN: Filter berdasar bahasa (contoh: "en", "ru")
+	TargetLanguageCode string `form:"target_language_code"`
 	CategoryID         string `form:"category_id"`
 	PartOfSpeech       string `form:"part_of_speech"`
 	IsFavorite         *bool  `form:"is_favorite"`
-	IsBookmarked       *bool  `form:"is_bookmarked"`
 	StartDate          string `form:"start_date"`
 	EndDate            string `form:"end_date"`
 	SortBy             string `form:"sort_by"`
@@ -34,18 +47,19 @@ type WordFilterRequest struct {
 	Limit              int    `form:"limit,default=20"`
 }
 
-// 3. Response untuk menampilkan data Word ke Frontend
+// ==========================================
+// RESPONSE: FORMAT JSON KE FRONTEND
+// ==========================================
+
 type WordResponse struct {
-	ID                 string           `json:"id"`
-	TargetLanguageCode string           `json:"target_language_code"`
-	TargetWord         string           `json:"target_word"`
-	NativeWord         string           `json:"native_word"`
-	PartOfSpeech       string           `json:"part_of_speech"`
-	IsFavorite         bool             `json:"is_favorite"`
-	IsBookmarked       bool             `json:"is_bookmarked"`
-	CreatedAt          string           `json:"created_at"`
-	Categories         []CategoryRes    `json:"categories"`
-	Examples           []WordExampleRes `json:"examples"`
+	ID           string           `json:"id"`
+	NativeWord   string           `json:"native_word"`
+	PartOfSpeech string           `json:"part_of_speech"`
+	IsFavorite   bool             `json:"is_favorite"`
+	CreatedAt    string           `json:"created_at"`
+	Categories   []CategoryRes    `json:"categories"`
+	Targets      []WordTargetRes  `json:"targets"`
+	Examples     []WordExampleRes `json:"examples"`
 }
 
 type CategoryRes struct {
@@ -54,13 +68,23 @@ type CategoryRes struct {
 	Icon string `json:"icon"`
 }
 
-type WordExampleRes struct {
-	ID             string `json:"id"`
-	TargetSentence string `json:"target_sentence"`
-	NativeSentence string `json:"native_sentence"`
+type WordTargetRes struct {
+	ID           string `json:"id"`
+	LanguageCode string `json:"language_code"`
+	TargetWord   string `json:"target_word"`
 }
 
-// Tambahkan struct ini di bawah WordFilterRequest
+type WordExampleRes struct {
+	ID              string             `json:"id"`
+	NativeSentence  string             `json:"native_sentence"`
+	TargetSentences []ExampleTargetRes `json:"target_sentences"`
+}
+
+type ExampleTargetRes struct {
+	ID           string `json:"id"`
+	LanguageCode string `json:"language_code"`
+	Sentence     string `json:"sentence"`
+}
 
 type PaginationMeta struct {
 	TotalItems  int64 `json:"total_items"`
@@ -70,21 +94,11 @@ type PaginationMeta struct {
 }
 
 type WordPaginationResponse struct {
-	Data []WordResponse `json:"data"` // Data tetap menggunakan struktur list kata yang lama
+	Data []WordResponse `json:"data"`
 	Meta PaginationMeta `json:"meta"`
 }
 
-// Tambahkan struct ini untuk respons Part of Speech
 type WordTypeCountResponse struct {
 	PartOfSpeech string `json:"part_of_speech"`
 	Count        int64  `json:"count"`
-}
-
-// DTO Khusus untuk Update (Hanya 1 bahasa karena merujuk pada 1 ID Word spesifik)
-type UpdateWordRequest struct {
-	TargetWord     string           `json:"target_word" binding:"required"`
-	NativeWord     string           `json:"native_word" binding:"required"`
-	PartOfSpeech   string           `json:"part_of_speech" binding:"required"`
-	CategoryIDs    []string         `json:"category_ids"`
-	Examples       []ExampleRequest `json:"examples" binding:"max=3"`
 }

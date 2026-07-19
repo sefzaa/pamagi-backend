@@ -19,24 +19,21 @@ func NewWordRepository(db *gorm.DB) domain.WordRepository {
 }
 
 // Cari fungsi Create dan ganti dengan kode ini:
-func (r *wordRepository) Create(c context.Context, words []*entity.Word, categoryIDs []string) error {
+func (r *wordRepository) Create(c context.Context, word *entity.Word, categoryIDs []string) error {
 	return r.db.WithContext(c).Transaction(func(tx *gorm.DB) error {
-		// 1. Simpan semua pecahan kata (bisa 1 atau 2 kata tergantung input user)
-		if err := tx.Create(&words).Error; err != nil {
+		// Simpan Induk (GORM otomatis akan menyimpan Targets dan Examples)
+		if err := tx.Create(word).Error; err != nil {
 			return err
 		}
 		
-		// 2. Hubungkan setiap kata yang baru dibuat dengan kategori
+		// Hubungkan dengan kategori
 		if len(categoryIDs) > 0 {
 			var categories []entity.Category
 			if err := tx.Where("id IN ?", categoryIDs).Find(&categories).Error; err != nil {
 				return err
 			}
-			
-			for _, word := range words {
-				if err := tx.Model(word).Association("Categories").Append(&categories); err != nil {
-					return err
-				}
+			if err := tx.Model(word).Association("Categories").Append(&categories); err != nil {
+				return err
 			}
 		}
 		return nil
@@ -48,58 +45,47 @@ func (r *wordRepository) Fetch(c context.Context, userID string, filter dto.Word
 	var words []entity.Word
 	var total int64 
 	
-	query := r.db.WithContext(c).Model(&entity.Word{}).Where("user_id = ?", userID)
+	query := r.db.WithContext(c).Model(&entity.Word{}).Where("words.user_id = ?", userID)
 
-	// --- TAMBAHAN FILTER BAHASA ---
+	// --- FILTER BAHASA (JOIN ke tabel anak word_targets) ---
 	if filter.TargetLanguageCode != "" {
-		query = query.Where("target_language_code = ?", filter.TargetLanguageCode)
+		query = query.Joins("JOIN word_targets wt ON wt.word_id = words.id").Where("wt.language_code = ?", filter.TargetLanguageCode)
 	}
 
-	// --- PERBAIKAN FILTER MULTI-SELECT ---
-	
-	// 1. Filter Part of Speech (Mendukung comma-separated)
+	// 1. Filter Part of Speech
 	if filter.PartOfSpeech != "" { 
 		posList := strings.Split(filter.PartOfSpeech, ",")
-		query = query.Where("part_of_speech IN ?", posList) 
+		query = query.Where("words.part_of_speech IN ?", posList) 
 	}
 
-	if filter.IsFavorite != nil { query = query.Where("is_favorite = ?", *filter.IsFavorite) }
-	if filter.IsBookmarked != nil { query = query.Where("is_bookmarked = ?", *filter.IsBookmarked) }
+	if filter.IsFavorite != nil { query = query.Where("words.is_favorite = ?", *filter.IsFavorite) }
+	// (Filter IsBookmarked sudah dibuang)
 	
-	// 2. Filter Category ID (Mendukung comma-separated & kombinasi Uncategorized)
+	// 2. Filter Category ID
 	if filter.CategoryID != "" {
 		catList := strings.Split(filter.CategoryID, ",")
 		hasUncategorized := false
 		var validIDs []string
 
-		// Pisahkan mana ID asli dan mana yang "uncategorized"
 		for _, id := range catList {
-			if id == "uncategorized" {
-				hasUncategorized = true
-			} else {
-				validIDs = append(validIDs, id)
-			}
+			if id == "uncategorized" { hasUncategorized = true } else { validIDs = append(validIDs, id) }
 		}
 
 		if hasUncategorized && len(validIDs) > 0 {
-			// Jika user filter kategori tertentu + uncategorized sekaligus
-			query = query.Joins("LEFT JOIN word_categories wc ON wc.word_id = words.id").
-				Where("wc.category_id IN ? OR wc.word_id IS NULL", validIDs)
+			query = query.Joins("LEFT JOIN word_categories wc ON wc.word_id = words.id").Where("wc.category_id IN ? OR wc.word_id IS NULL", validIDs)
 		} else if hasUncategorized {
-			// Jika user cuma filter uncategorized
-			query = query.Joins("LEFT JOIN word_categories wc ON wc.word_id = words.id").
-				Where("wc.word_id IS NULL")
+			query = query.Joins("LEFT JOIN word_categories wc ON wc.word_id = words.id").Where("wc.word_id IS NULL")
 		} else if len(validIDs) > 0 {
-			// Jika user cuma filter kategori normal (satu atau banyak)
-			query = query.Joins("JOIN word_categories wc ON wc.word_id = words.id").
-				Where("wc.category_id IN ?", validIDs)
+			query = query.Joins("JOIN word_categories wc ON wc.word_id = words.id").Where("wc.category_id IN ?", validIDs)
 		}
 	}
-	// -------------------------------------
 
 	if filter.StartDate != "" && filter.EndDate != "" {
 		query = query.Where("DATE(words.created_at) BETWEEN ? AND ?", filter.StartDate, filter.EndDate)
 	}
+
+	// Group By agar tidak duplikat gara-gara JOIN
+	query = query.Group("words.id")
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -107,13 +93,14 @@ func (r *wordRepository) Fetch(c context.Context, userID string, filter dto.Word
 
 	switch filter.SortBy {
 	case "oldest": query = query.Order("words.created_at ASC")
-	case "a_z": query = query.Order("words.target_word ASC")
-	case "z_a": query = query.Order("words.target_word DESC")
+	case "a_z": query = query.Order("words.native_word ASC")
+	case "z_a": query = query.Order("words.native_word DESC")
 	default: query = query.Order("words.created_at DESC")
 	}
 
 	offset := (filter.Page - 1) * filter.Limit
-	err := query.Preload("Categories").Preload("Examples").Limit(filter.Limit).Offset(offset).Find(&words).Error
+	// Pastikan kita me-load seluruh cucu relasinya
+	err := query.Preload("Categories").Preload("Targets").Preload("Examples.Targets").Limit(filter.Limit).Offset(offset).Find(&words).Error
 	
 	return words, total, err 
 }
@@ -131,7 +118,7 @@ func (r *wordRepository) CountByPartOfSpeech(c context.Context, userID string) (
 
 func (r *wordRepository) FetchByID(c context.Context, wordID string, userID string) (entity.Word, error) {
 	var word entity.Word
-	err := r.db.WithContext(c).Preload("Categories").Preload("Examples").Where("id = ? AND user_id = ?", wordID, userID).First(&word).Error
+	err := r.db.WithContext(c).Preload("Categories").Preload("Targets").Preload("Examples.Targets").Where("id = ? AND user_id = ?", wordID, userID).First(&word).Error
 	return word, err
 }
 
@@ -140,10 +127,6 @@ func (r *wordRepository) ToggleFavorite(c context.Context, wordID string, userID
 		UpdateColumn("is_favorite", gorm.Expr("NOT is_favorite")).Error
 }
 
-func (r *wordRepository) ToggleBookmark(c context.Context, wordID string, userID string) error {
-	return r.db.WithContext(c).Model(&entity.Word{}).Where("id = ? AND user_id = ?", wordID, userID).
-		UpdateColumn("is_bookmarked", gorm.Expr("NOT is_bookmarked")).Error
-}
 
 func (r *wordRepository) Delete(c context.Context, wordID string, userID string) error {
 	return r.db.WithContext(c).Transaction(func(tx *gorm.DB) error {
@@ -170,41 +153,38 @@ func (r *wordRepository) Delete(c context.Context, wordID string, userID string)
 
 func (r *wordRepository) Update(c context.Context, word *entity.Word, categoryIDs []string) error {
 	return r.db.WithContext(c).Transaction(func(tx *gorm.DB) error {
-		// 1. Pastikan kata tersebut ada dan memang milik user
+		// 1. Cek existensi
 		var existing entity.Word
 		if err := tx.Where("id = ? AND user_id = ?", word.ID, word.UserID).First(&existing).Error; err != nil {
 			return err
 		}
 
-		// 2. Update data utama kata (Gunakan string db dan variabel struct yang baru)
+		// 2. Update Induk Utama
 		if err := tx.Model(&existing).Updates(map[string]interface{}{
-			"target_word":    word.TargetWord,
 			"native_word":    word.NativeWord,
 			"part_of_speech": word.PartOfSpeech,
 		}).Error; err != nil {
 			return err
 		}
 
-		// 3. Replace relasi Kategori
+		// 3. Update Kategori Pivot
 		var categories []entity.Category
-		if len(categoryIDs) > 0 {
-			tx.Where("id IN ?", categoryIDs).Find(&categories)
-		}
+		if len(categoryIDs) > 0 { tx.Where("id IN ?", categoryIDs).Find(&categories) }
 		if err := tx.Model(&existing).Association("Categories").Replace(&categories); err != nil {
 			return err
 		}
 
-		// 4. Update Contoh Kalimat
-		if err := tx.Where("word_id = ?", word.ID).Delete(&entity.WordExample{}).Error; err != nil {
-			return err
+		// 4. Bersihkan Anak & Cucu Lama
+		tx.Where("word_id = ?", word.ID).Delete(&entity.WordTarget{})
+		tx.Where("word_id = ?", word.ID).Delete(&entity.WordExample{})
+		// (word_example_targets otomatis terhapus karena Cascade di database)
+
+		// 5. Masukkan Anak & Cucu Baru
+		if len(word.Targets) > 0 {
+			if err := tx.Create(&word.Targets).Error; err != nil { return err }
 		}
 		if len(word.Examples) > 0 {
-			for i := range word.Examples {
-				word.Examples[i].WordID = word.ID
-			}
-			if err := tx.Create(&word.Examples).Error; err != nil {
-				return err
-			}
+			if err := tx.Create(&word.Examples).Error; err != nil { return err }
 		}
 
 		return nil

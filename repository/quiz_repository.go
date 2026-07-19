@@ -46,12 +46,12 @@ func (r *quizRepository) GenerateQuestions(c context.Context, userID string, fil
 	var count int64
 	query.Count(&count)
 
-	// 3. Logika Sorting (Hapus query.Order("RAND()") agar selalu urut dulu sebelum dilimit)
+// 3. Logika Sorting
 	switch filter.SortBy {
 	case "name_asc":
-		query = query.Order("russian_word ASC")
+		query = query.Order("native_word ASC")  // Ubah russian_word menjadi native_word
 	case "name_desc":
-		query = query.Order("russian_word DESC")
+		query = query.Order("native_word DESC") // Ubah russian_word menjadi native_word
 	case "created_asc":
 		query = query.Order("created_at ASC")
 	case "created_desc":
@@ -59,11 +59,12 @@ func (r *quizRepository) GenerateQuestions(c context.Context, userID string, fil
 	case "updated_desc":
 		query = query.Order("updated_at DESC")
 	default:
-		query = query.Order("created_at DESC") // Default selalu ambil kata yang paling baru diinput
+		query = query.Order("created_at DESC")
 	}
 
-	// 4. Terapkan Limit dan Tarik Datanya beserta relasinya
-	err := query.Preload("Categories").Preload("Examples").Limit(limit).Find(&words).Error	
+	// 4. Terapkan Limit dan Tarik Datanya beserta semua relasi Induk-Anak
+	// UBAH BARIS INI
+	err := query.Preload("Categories").Preload("Targets").Preload("Examples.Targets").Limit(limit).Find(&words).Error	
 	return words, err
 }
 
@@ -94,7 +95,8 @@ func (r *quizRepository) SaveQuizHistory(c context.Context, session *entity.Quiz
 func (r *quizRepository) GetHistories(c context.Context, userID string) ([]entity.QuizHistory, error) {
 	var sessions []entity.QuizHistory
 	err := r.db.WithContext(c).Where("user_id = ?", userID).
-		Preload("Details.Word.Examples"). // UBAH BAGIAN INI
+		Preload("Details.Word.Targets").          // TAMBAHAN
+		Preload("Details.Word.Examples.Targets"). // UBAH BAGIAN INI
 		Order("created_at DESC").
 		Find(&sessions).Error
 	return sessions, err
