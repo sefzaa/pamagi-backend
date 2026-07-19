@@ -17,7 +17,7 @@ import (
 // @title Pamagi API
 // @version 1.0
 // @description Ini adalah dokumentasi API untuk backend Pamagi.
-// @host pamagi.mydm.cloud
+// @host localhost:8080
 // @BasePath /
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
@@ -41,5 +41,3 @@ func main() {
 	// Jalankan server
 	ginEngine.Run(":" + env.AppPort)
 }
-
-

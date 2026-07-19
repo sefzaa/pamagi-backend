@@ -6,7 +6,9 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     subscription_status ENUM('FREE', 'PREMIUM_LITE', 'PREMIUM_PRO', 'PREMIUM_PLATINUM') DEFAULT 'FREE',
     no_wa VARCHAR(20) DEFAULT '0',
-    region VARCHAR(255) DEFAULT NULL,
+    native_language VARCHAR(100) DEFAULT NULL,    -- Contoh: 'Indonesia', 'Malaysia'
+    native_flag_icon VARCHAR(255) DEFAULT NULL,   -- Contoh: Emoji '🇮🇩' atau URL icon bendera
+    slogan VARCHAR(255) DEFAULT 'Consistency is key to fluency.',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

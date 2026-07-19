@@ -93,3 +93,53 @@ func (ac *AuthController) Logout(c *gin.Context) {
 
 	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Logout berhasil"})
 }
+
+// GetProfile godoc
+// @Summary Ambil Data User Saat Ini
+// @Description Mendapatkan info profil, bahasa ibu, dan bahasa yang dipelajari
+// @Tags Profile
+// @Security ApiKeyAuth
+// @Produce json
+// @Success 200 {object} dto.UserResponse
+// @Router /users/me [get]
+func (ac *AuthController) GetProfile(c *gin.Context) {
+	userID := c.GetString("x-user-id")
+	
+	response, err := ac.AuthUsecase.GetProfile(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal mengambil data profil"})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+
+// RefreshToken godoc
+// @Summary Refresh Access Token
+// @Description Mendapatkan access token baru menggunakan refresh token tanpa harus login ulang
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body dto.RefreshTokenRequest true "Refresh Token Request"
+// @Success 200 {object} dto.AuthResponse
+// @Failure 400 {object} domain.ErrorResponse
+// @Failure 401 {object} domain.ErrorResponse
+// @Router /refresh [post]
+func (ac *AuthController) Refresh(c *gin.Context) {
+	var request dto.RefreshTokenRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: err.Error()})
+		return
+	}
+
+	// Panggil usecase
+	response, err := ac.AuthUsecase.RefreshToken(c.Request.Context(), &request)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, domain.ErrorResponse{Message: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}

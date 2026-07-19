@@ -625,6 +625,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/refresh": {
+            "post": {
+                "description": "Mendapatkan access token baru menggunakan refresh token tanpa harus login ulang",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Refresh Access Token",
+                "parameters": [
+                    {
+                        "description": "Refresh Token Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.AuthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/register": {
             "post": {
                 "description": "Mendaftarkan akun menggunakan email dan password",
@@ -666,6 +712,31 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Mendapatkan info profil, bahasa ibu, dan bahasa yang dipelajari",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Ambil Data User Saat Ini",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserResponse"
                         }
                     }
                 }
@@ -893,7 +964,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateWordRequest"
+                            "$ref": "#/definitions/dto.UpdateWordRequest"
                         }
                     }
                 ],
@@ -1101,47 +1172,45 @@ const docTemplate = `{
         "dto.CreateWordRequest": {
             "type": "object",
             "required": [
+                "native_word",
                 "part_of_speech",
-                "russian_word",
-                "translation"
+                "targets"
             ],
             "properties": {
                 "category_ids": {
-                    "description": "Array ID kategori (Opsional)",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "examples": {
-                    "description": "Array contoh kalimat (Opsional)",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.ExampleRequest"
-                    }
+                "native_word": {
+                    "type": "string"
                 },
                 "part_of_speech": {
                     "type": "string"
                 },
-                "russian_word": {
-                    "type": "string"
-                },
-                "translation": {
-                    "type": "string"
+                "targets": {
+                    "description": "Array bahasa asing yang diinput (maks 2)",
+                    "type": "array",
+                    "maxItems": 2,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/dto.WordTargetRequest"
+                    }
                 }
             }
         },
         "dto.ExampleRequest": {
             "type": "object",
             "required": [
-                "russian_sentence",
-                "translated_sentence"
+                "native_sentence",
+                "target_sentence"
             ],
             "properties": {
-                "russian_sentence": {
+                "native_sentence": {
                     "type": "string"
                 },
-                "translated_sentence": {
+                "target_sentence": {
                     "type": "string"
                 }
             }
@@ -1340,14 +1409,19 @@ const docTemplate = `{
                 "is_correct": {
                     "type": "boolean"
                 },
+                "native_word": {
+                    "description": "PENGGANTI Translation",
+                    "type": "string"
+                },
                 "part_of_speech": {
-                    "description": "\u003c-- TAMBAHKAN INI",
                     "type": "string"
                 },
-                "russian_word": {
+                "target_language_code": {
+                    "description": "TAMBAHAN",
                     "type": "string"
                 },
-                "translation": {
+                "target_word": {
+                    "description": "PENGGANTI RussianWord",
                     "type": "string"
                 },
                 "word_id": {
@@ -1388,12 +1462,26 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.RefreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.RegisterRequest": {
             "type": "object",
             "required": [
                 "email",
                 "name",
+                "native_flag_icon",
+                "native_language",
                 "password",
+                "target_languages",
                 "username"
             ],
             "properties": {
@@ -1403,6 +1491,12 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "native_flag_icon": {
+                    "type": "string"
+                },
+                "native_language": {
+                    "type": "string"
+                },
                 "no_wa": {
                     "type": "string"
                 },
@@ -1410,8 +1504,17 @@ const docTemplate = `{
                     "type": "string",
                     "minLength": 6
                 },
-                "region": {
+                "slogan": {
                     "type": "string"
+                },
+                "target_languages": {
+                    "description": "Maksimal 2 bahasa",
+                    "type": "array",
+                    "maxItems": 2,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/dto.TargetLanguageReq"
+                    }
                 },
                 "username": {
                     "type": "string"
@@ -1470,6 +1573,71 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.TargetLanguageReq": {
+            "type": "object",
+            "required": [
+                "flag_icon",
+                "language_code",
+                "language_name"
+            ],
+            "properties": {
+                "flag_icon": {
+                    "type": "string"
+                },
+                "language_code": {
+                    "type": "string"
+                },
+                "language_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.TargetLanguageRes": {
+            "type": "object",
+            "properties": {
+                "flag_icon": {
+                    "type": "string"
+                },
+                "language_code": {
+                    "type": "string"
+                },
+                "language_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateWordRequest": {
+            "type": "object",
+            "required": [
+                "native_word",
+                "part_of_speech",
+                "target_word"
+            ],
+            "properties": {
+                "category_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "examples": {
+                    "type": "array",
+                    "maxItems": 3,
+                    "items": {
+                        "$ref": "#/definitions/dto.ExampleRequest"
+                    }
+                },
+                "native_word": {
+                    "type": "string"
+                },
+                "part_of_speech": {
+                    "type": "string"
+                },
+                "target_word": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.UserResponse": {
             "type": "object",
             "properties": {
@@ -1482,8 +1650,23 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "native_flag_icon": {
+                    "type": "string"
+                },
+                "native_language": {
+                    "type": "string"
+                },
+                "slogan": {
+                    "type": "string"
+                },
                 "subscription_status": {
                     "type": "string"
+                },
+                "target_languages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TargetLanguageRes"
+                    }
                 },
                 "username": {
                     "type": "string"
@@ -1496,10 +1679,10 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "russian_sentence": {
+                "native_sentence": {
                     "type": "string"
                 },
-                "translated_sentence": {
+                "target_sentence": {
                     "type": "string"
                 }
             }
@@ -1546,13 +1729,39 @@ const docTemplate = `{
                 "is_favorite": {
                     "type": "boolean"
                 },
+                "native_word": {
+                    "type": "string"
+                },
                 "part_of_speech": {
                     "type": "string"
                 },
-                "russian_word": {
+                "target_language_code": {
                     "type": "string"
                 },
-                "translation": {
+                "target_word": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.WordTargetRequest": {
+            "type": "object",
+            "required": [
+                "language_code",
+                "target_word"
+            ],
+            "properties": {
+                "examples": {
+                    "description": "Maksimal 3 contoh kalimat per bahasa target",
+                    "type": "array",
+                    "maxItems": 3,
+                    "items": {
+                        "$ref": "#/definitions/dto.ExampleRequest"
+                    }
+                },
+                "language_code": {
+                    "type": "string"
+                },
+                "target_word": {
                     "type": "string"
                 }
             }
@@ -1581,7 +1790,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "pamagi.mydm.cloud",
+	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Pamagi API",

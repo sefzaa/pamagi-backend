@@ -52,15 +52,20 @@ func (u *quizUsecase) GenerateFlashcards(c context.Context, userID string, req *
 		for _, ex := range w.Examples {
 			exRes = append(exRes, dto.WordExampleRes{
 				ID: ex.ID, 
-				RussianSentence: ex.RussianSentence, 
-				TranslatedSentence: ex.TranslatedSentence,
+				TargetSentence: ex.TargetSentence, 
+				NativeSentence: ex.NativeSentence,
 			})
 		}
 		responses = append(responses, dto.WordResponse{
-			ID: w.ID, RussianWord: w.RussianWord, Translation: w.Translation,
-			PartOfSpeech: w.PartOfSpeech, IsFavorite: w.IsFavorite,
+			ID: w.ID, 
+			TargetLanguageCode: w.TargetLanguageCode, // Tambahan
+			TargetWord: w.TargetWord,                 // Ganti RussianWord
+			NativeWord: w.NativeWord,                 // Ganti Translation
+			PartOfSpeech: w.PartOfSpeech, 
+			IsFavorite: w.IsFavorite,
 			CreatedAt: w.CreatedAt.Format("2006-01-02 15:04:05"),
-			Categories: catRes, Examples: exRes,
+			Categories: catRes, 
+			Examples: exRes,
 		})
 	}
 
@@ -125,19 +130,20 @@ func (u *quizUsecase) GetQuizHistories(c context.Context, userID string) ([]dto.
 				for _, ex := range d.Word.Examples {
 					exRes = append(exRes, dto.WordExampleRes{
 						ID:                 ex.ID,
-						RussianSentence:    ex.RussianSentence,
-						TranslatedSentence: ex.TranslatedSentence,
+						TargetSentence:    ex.TargetSentence,
+						NativeSentence: ex.NativeSentence,
 					})
 				}
 				// ============================================================
 
 				detailRes = append(detailRes, dto.QuizDetailResponse{
-					WordID:      d.WordID,
-					RussianWord: d.Word.RussianWord,
-					Translation: d.Word.Translation,
-					PartOfSpeech: d.Word.PartOfSpeech,
-					IsCorrect:   d.IsCorrect, // Pastikan tipe data di DTO sudah *bool jika ingin mendukung null
-					Examples:    exRes,       // === MASUKKAN KE SINI ===
+					WordID:             d.WordID,
+					TargetLanguageCode: d.Word.TargetLanguageCode, // Tambahan
+					TargetWord:         d.Word.TargetWord,         // Ganti
+					NativeWord:         d.Word.NativeWord,         // Ganti
+					PartOfSpeech:       d.Word.PartOfSpeech,
+					IsCorrect:          d.IsCorrect,
+					Examples:           exRes,
 				})
 			}
 		}

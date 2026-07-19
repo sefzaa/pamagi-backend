@@ -7,27 +7,25 @@ import (
 )
 
 type WordRepository interface {
-	Create(c context.Context, word *entity.Word, categoryIDs []string) error
-	FetchByID(c context.Context, wordID string, userID string) (entity.Word, error) // Baru
+	Create(c context.Context, words []*entity.Word, categoryIDs []string) error
+	Fetch(c context.Context, userID string, filter dto.WordFilterRequest) ([]entity.Word, int64, error)
+	CountByPartOfSpeech(c context.Context, userID string) ([]dto.WordTypeCountResponse, error)
+	FetchByID(c context.Context, wordID string, userID string) (entity.Word, error)
 	ToggleFavorite(c context.Context, wordID string, userID string) error
-	ToggleBookmark(c context.Context, wordID string, userID string) error // Baru
+	ToggleBookmark(c context.Context, wordID string, userID string) error
 	Delete(c context.Context, wordID string, userID string) error
-	Update(c context.Context, word *entity.Word, categoryIDs []string) error
-
-	Fetch(c context.Context, userID string, filter dto.WordFilterRequest) ([]entity.Word, int64, error) // Ubah
-	CountByPartOfSpeech(c context.Context, userID string) ([]dto.WordTypeCountResponse, error) // Tambah
+    // PERBAIKAN DI SINI: Gunakan Update, bukan UpdateWord
+	Update(c context.Context, word *entity.Word, categoryIDs []string) error 
 }
 
 type WordUsecase interface {
 	CreateWord(c context.Context, userID string, req *dto.CreateWordRequest) error
-	GetWordDetail(c context.Context, wordID string, userID string) (dto.WordResponse, error) // Baru
+	GetWordDetail(c context.Context, wordID string, userID string) (dto.WordResponse, error) 
 	ToggleFavorite(c context.Context, wordID string, userID string) error
-	ToggleBookmark(c context.Context, wordID string, userID string) error // Baru
+	ToggleBookmark(c context.Context, wordID string, userID string) error 
 	DeleteWord(c context.Context, wordID string, userID string) error
-	UpdateWord(c context.Context, wordID string, userID string, req *dto.CreateWordRequest) error
+	UpdateWord(c context.Context, wordID string, userID string, req *dto.UpdateWordRequest) error
 
-	GetWords(c context.Context, userID string, filter dto.WordFilterRequest) (dto.WordPaginationResponse, error) // Ubah
-	GetWordTypes(c context.Context, userID string) ([]dto.WordTypeCountResponse, error) // Tambah
+	GetWords(c context.Context, userID string, filter dto.WordFilterRequest) (dto.WordPaginationResponse, error) 
+	GetWordTypes(c context.Context, userID string) ([]dto.WordTypeCountResponse, error) 
 }
-
-

@@ -17,26 +17,36 @@ func NewWordUsecase(wordRepo domain.WordRepository) domain.WordUsecase {
 }
 
 func (u *wordUsecase) CreateWord(c context.Context, userID string, req *dto.CreateWordRequest) error {
-	wordID := uuid.New().String()
-	var examples []entity.WordExample
-	for _, exReq := range req.Examples {
-		examples = append(examples, entity.WordExample{
-			ID: uuid.New().String(), 
-			WordID: wordID, 
-			RussianSentence: exReq.RussianSentence, 
-			TranslatedSentence: exReq.TranslatedSentence,
+	var words []*entity.Word
+
+	// Looping berdasarkan jumlah bahasa yang dipelajari (Maksimal 2)
+	for _, target := range req.Targets {
+		wordID := uuid.New().String()
+		var examples []entity.WordExample
+		
+		// Looping contoh kalimat (Maksimal 3 dari DTO)
+		for _, exReq := range target.Examples {
+			examples = append(examples, entity.WordExample{
+				ID:             uuid.New().String(),
+				WordID:         wordID,
+				TargetSentence: exReq.TargetSentence,
+				NativeSentence: exReq.NativeSentence,
+			})
+		}
+
+		words = append(words, &entity.Word{
+			ID:                 wordID,
+			UserID:             userID,
+			TargetLanguageCode: target.LanguageCode,
+			TargetWord:         target.TargetWord,
+			NativeWord:         req.NativeWord, // Terjemahan inti dipakai berulang
+			PartOfSpeech:       req.PartOfSpeech,
+			Examples:           examples,
 		})
 	}
 
-	word := &entity.Word{
-		ID: wordID, 
-		UserID: userID, 
-		RussianWord: req.RussianWord, 
-		Translation: req.Translation, 
-		PartOfSpeech: req.PartOfSpeech, 
-		Examples: examples,
-	}
-	return u.wordRepo.Create(c, word, req.CategoryIDs)
+	// Kirim array words ke repository untuk di-save dalam satu transaksi
+	return u.wordRepo.Create(c, words, req.CategoryIDs)
 }
 
 // Helper untuk mapping Entity ke DTO
@@ -44,27 +54,30 @@ func mapToWordResponse(w entity.Word) dto.WordResponse {
 	var catRes []dto.CategoryRes
 	for _, cat := range w.Categories {
 		catRes = append(catRes, dto.CategoryRes{
-			ID: cat.ID, 
-			Name: cat.Name, 
-			Icon: cat.Icon})
+			ID:   cat.ID,
+			Name: cat.Name,
+			Icon: cat.Icon,
+		})
 	}
 	var exRes []dto.WordExampleRes
 	for _, ex := range w.Examples {
 		exRes = append(exRes, dto.WordExampleRes{
-			ID: ex.ID, 
-			RussianSentence: ex.RussianSentence, 
-			TranslatedSentence: ex.TranslatedSentence})
+			ID:                 ex.ID,
+			TargetSentence:     ex.TargetSentence, // PENGGANTI RussianSentence
+			NativeSentence:     ex.NativeSentence, // PENGGANTI TranslatedSentence
+		})
 	}
 	return dto.WordResponse{
-		ID: w.ID, 
-		RussianWord: w.RussianWord, 
-		Translation: w.Translation, 
-		PartOfSpeech: w.PartOfSpeech,
-		IsFavorite: w.IsFavorite, 
-		IsBookmarked: w.IsBookmarked, 
-		CreatedAt: w.CreatedAt.Format("2006-01-02 15:04:05"),
-		Categories: catRes, 
-		Examples: exRes,
+		ID:                 w.ID,
+		TargetLanguageCode: w.TargetLanguageCode,  // TAMBAHAN
+		TargetWord:         w.TargetWord,          // PENGGANTI RussianWord
+		NativeWord:         w.NativeWord,          // PENGGANTI Translation
+		PartOfSpeech:       w.PartOfSpeech,
+		IsFavorite:         w.IsFavorite,
+		IsBookmarked:       w.IsBookmarked,
+		CreatedAt:          w.CreatedAt.Format("2006-01-02 15:04:05"),
+		Categories:         catRes,
+		Examples:           exRes,
 	}
 }
 
@@ -120,22 +133,22 @@ func (u *wordUsecase) DeleteWord(c context.Context, wordID string, userID string
 	return u.wordRepo.Delete(c, wordID, userID)
 }
 
-func (u *wordUsecase) UpdateWord(c context.Context, wordID string, userID string, req *dto.CreateWordRequest) error {
+func (u *wordUsecase) UpdateWord(c context.Context, wordID string, userID string, req *dto.UpdateWordRequest) error {
 	var examples []entity.WordExample
 	for _, exReq := range req.Examples {
 		examples = append(examples, entity.WordExample{
-			ID:                 uuid.New().String(),
-			WordID:             wordID, // Ikat langsung dengan ID kata yang diedit
-			RussianSentence:    exReq.RussianSentence,
-			TranslatedSentence: exReq.TranslatedSentence,
+			ID:             uuid.New().String(),
+			WordID:         wordID,
+			TargetSentence: exReq.TargetSentence,
+			NativeSentence: exReq.NativeSentence,
 		})
 	}
 
 	word := &entity.Word{
 		ID:           wordID,
 		UserID:       userID,
-		RussianWord:  req.RussianWord,
-		Translation:  req.Translation,
+		TargetWord:   req.TargetWord,
+		NativeWord:   req.NativeWord,
 		PartOfSpeech: req.PartOfSpeech,
 		Examples:     examples,
 	}

@@ -53,35 +53,34 @@ definitions:
   dto.CreateWordRequest:
     properties:
       category_ids:
-        description: Array ID kategori (Opsional)
         items:
           type: string
         type: array
-      examples:
-        description: Array contoh kalimat (Opsional)
-        items:
-          $ref: '#/definitions/dto.ExampleRequest'
-        type: array
+      native_word:
+        type: string
       part_of_speech:
         type: string
-      russian_word:
-        type: string
-      translation:
-        type: string
+      targets:
+        description: Array bahasa asing yang diinput (maks 2)
+        items:
+          $ref: '#/definitions/dto.WordTargetRequest'
+        maxItems: 2
+        minItems: 1
+        type: array
     required:
+    - native_word
     - part_of_speech
-    - russian_word
-    - translation
+    - targets
     type: object
   dto.ExampleRequest:
     properties:
-      russian_sentence:
+      native_sentence:
         type: string
-      translated_sentence:
+      target_sentence:
         type: string
     required:
-    - russian_sentence
-    - translated_sentence
+    - native_sentence
+    - target_sentence
     type: object
   dto.GenerateFlashcardRequest:
     properties:
@@ -217,12 +216,16 @@ definitions:
         type: array
       is_correct:
         type: boolean
+      native_word:
+        description: PENGGANTI Translation
+        type: string
       part_of_speech:
-        description: <-- TAMBAHKAN INI
         type: string
-      russian_word:
+      target_language_code:
+        description: TAMBAHAN
         type: string
-      translation:
+      target_word:
+        description: PENGGANTI RussianWord
         type: string
       word_id:
         type: string
@@ -249,25 +252,46 @@ definitions:
       total_words:
         type: integer
     type: object
+  dto.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
   dto.RegisterRequest:
     properties:
       email:
         type: string
       name:
         type: string
+      native_flag_icon:
+        type: string
+      native_language:
+        type: string
       no_wa:
         type: string
       password:
         minLength: 6
         type: string
-      region:
+      slogan:
         type: string
+      target_languages:
+        description: Maksimal 2 bahasa
+        items:
+          $ref: '#/definitions/dto.TargetLanguageReq'
+        maxItems: 2
+        minItems: 1
+        type: array
       username:
         type: string
     required:
     - email
     - name
+    - native_flag_icon
+    - native_language
     - password
+    - target_languages
     - username
     type: object
   dto.SubmitQuizDetail:
@@ -305,6 +329,50 @@ definitions:
     - status
     - total_words
     type: object
+  dto.TargetLanguageReq:
+    properties:
+      flag_icon:
+        type: string
+      language_code:
+        type: string
+      language_name:
+        type: string
+    required:
+    - flag_icon
+    - language_code
+    - language_name
+    type: object
+  dto.TargetLanguageRes:
+    properties:
+      flag_icon:
+        type: string
+      language_code:
+        type: string
+      language_name:
+        type: string
+    type: object
+  dto.UpdateWordRequest:
+    properties:
+      category_ids:
+        items:
+          type: string
+        type: array
+      examples:
+        items:
+          $ref: '#/definitions/dto.ExampleRequest'
+        maxItems: 3
+        type: array
+      native_word:
+        type: string
+      part_of_speech:
+        type: string
+      target_word:
+        type: string
+    required:
+    - native_word
+    - part_of_speech
+    - target_word
+    type: object
   dto.UserResponse:
     properties:
       email:
@@ -313,8 +381,18 @@ definitions:
         type: string
       name:
         type: string
+      native_flag_icon:
+        type: string
+      native_language:
+        type: string
+      slogan:
+        type: string
       subscription_status:
         type: string
+      target_languages:
+        items:
+          $ref: '#/definitions/dto.TargetLanguageRes'
+        type: array
       username:
         type: string
     type: object
@@ -322,9 +400,9 @@ definitions:
     properties:
       id:
         type: string
-      russian_sentence:
+      native_sentence:
         type: string
-      translated_sentence:
+      target_sentence:
         type: string
     type: object
   dto.WordPaginationResponse:
@@ -355,12 +433,30 @@ definitions:
         type: boolean
       is_favorite:
         type: boolean
+      native_word:
+        type: string
       part_of_speech:
         type: string
-      russian_word:
+      target_language_code:
         type: string
-      translation:
+      target_word:
         type: string
+    type: object
+  dto.WordTargetRequest:
+    properties:
+      examples:
+        description: Maksimal 3 contoh kalimat per bahasa target
+        items:
+          $ref: '#/definitions/dto.ExampleRequest'
+        maxItems: 3
+        type: array
+      language_code:
+        type: string
+      target_word:
+        type: string
+    required:
+    - language_code
+    - target_word
     type: object
   dto.WordTypeCountResponse:
     properties:
@@ -369,7 +465,7 @@ definitions:
       part_of_speech:
         type: string
     type: object
-host: pamagi.mydm.cloud
+host: localhost:8080
 info:
   contact: {}
   description: Ini adalah dokumentasi API untuk backend Pamagi.
@@ -764,6 +860,37 @@ paths:
       summary: Toggle Pin Catatan
       tags:
       - Note
+  /refresh:
+    post:
+      consumes:
+      - application/json
+      description: Mendapatkan access token baru menggunakan refresh token tanpa harus
+        login ulang
+      parameters:
+      - description: Refresh Token Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Refresh Access Token
+      tags:
+      - Auth
   /register:
     post:
       consumes:
@@ -794,6 +921,21 @@ paths:
       summary: Register user baru
       tags:
       - Auth
+  /users/me:
+    get:
+      description: Mendapatkan info profil, bahasa ibu, dan bahasa yang dipelajari
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Ambil Data User Saat Ini
+      tags:
+      - Profile
   /words:
     get:
       description: Menampilkan daftar kosakata dengan fitur filter kombo (limit 20)
@@ -939,7 +1081,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateWordRequest'
+          $ref: '#/definitions/dto.UpdateWordRequest'
       produces:
       - application/json
       responses:

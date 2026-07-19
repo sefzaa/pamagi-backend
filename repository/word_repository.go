@@ -18,16 +18,25 @@ func NewWordRepository(db *gorm.DB) domain.WordRepository {
 	return &wordRepository{db: db}
 }
 
-func (r *wordRepository) Create(c context.Context, word *entity.Word, categoryIDs []string) error {
+// Cari fungsi Create dan ganti dengan kode ini:
+func (r *wordRepository) Create(c context.Context, words []*entity.Word, categoryIDs []string) error {
 	return r.db.WithContext(c).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(word).Error; err != nil {
+		// 1. Simpan semua pecahan kata (bisa 1 atau 2 kata tergantung input user)
+		if err := tx.Create(&words).Error; err != nil {
 			return err
 		}
+		
+		// 2. Hubungkan setiap kata yang baru dibuat dengan kategori
 		if len(categoryIDs) > 0 {
 			var categories []entity.Category
-			tx.Where("id IN ?", categoryIDs).Find(&categories)
-			if err := tx.Model(word).Association("Categories").Append(&categories); err != nil {
+			if err := tx.Where("id IN ?", categoryIDs).Find(&categories).Error; err != nil {
 				return err
+			}
+			
+			for _, word := range words {
+				if err := tx.Model(word).Association("Categories").Append(&categories); err != nil {
+					return err
+				}
 			}
 		}
 		return nil
@@ -40,6 +49,11 @@ func (r *wordRepository) Fetch(c context.Context, userID string, filter dto.Word
 	var total int64 
 	
 	query := r.db.WithContext(c).Model(&entity.Word{}).Where("user_id = ?", userID)
+
+	// --- TAMBAHAN FILTER BAHASA ---
+	if filter.TargetLanguageCode != "" {
+		query = query.Where("target_language_code = ?", filter.TargetLanguageCode)
+	}
 
 	// --- PERBAIKAN FILTER MULTI-SELECT ---
 	
@@ -93,8 +107,8 @@ func (r *wordRepository) Fetch(c context.Context, userID string, filter dto.Word
 
 	switch filter.SortBy {
 	case "oldest": query = query.Order("words.created_at ASC")
-	case "a_z": query = query.Order("words.russian_word ASC")
-	case "z_a": query = query.Order("words.russian_word DESC")
+	case "a_z": query = query.Order("words.target_word ASC")
+	case "z_a": query = query.Order("words.target_word DESC")
 	default: query = query.Order("words.created_at DESC")
 	}
 
@@ -156,22 +170,22 @@ func (r *wordRepository) Delete(c context.Context, wordID string, userID string)
 
 func (r *wordRepository) Update(c context.Context, word *entity.Word, categoryIDs []string) error {
 	return r.db.WithContext(c).Transaction(func(tx *gorm.DB) error {
-		// 1. Pastikan kata tersebut ada dan memang milik user yang sedang login
+		// 1. Pastikan kata tersebut ada dan memang milik user
 		var existing entity.Word
 		if err := tx.Where("id = ? AND user_id = ?", word.ID, word.UserID).First(&existing).Error; err != nil {
 			return err
 		}
 
-		// 2. Update data utama kata
+		// 2. Update data utama kata (Gunakan string db dan variabel struct yang baru)
 		if err := tx.Model(&existing).Updates(map[string]interface{}{
-			"russian_word":   word.RussianWord,
-			"translation":    word.Translation,
+			"target_word":    word.TargetWord,
+			"native_word":    word.NativeWord,
 			"part_of_speech": word.PartOfSpeech,
 		}).Error; err != nil {
 			return err
 		}
 
-		// 3. Replace relasi Kategori (tabel pivot word_categories otomatis diurus GORM)
+		// 3. Replace relasi Kategori
 		var categories []entity.Category
 		if len(categoryIDs) > 0 {
 			tx.Where("id IN ?", categoryIDs).Find(&categories)
@@ -180,12 +194,11 @@ func (r *wordRepository) Update(c context.Context, word *entity.Word, categoryID
 			return err
 		}
 
-		// 4. Update Contoh Kalimat (Hapus yang lama, simpan yang baru)
+		// 4. Update Contoh Kalimat
 		if err := tx.Where("word_id = ?", word.ID).Delete(&entity.WordExample{}).Error; err != nil {
 			return err
 		}
 		if len(word.Examples) > 0 {
-			// Pastikan setiap contoh kalimat baru di-binding ke WordID yang sedang diedit
 			for i := range word.Examples {
 				word.Examples[i].WordID = word.ID
 			}
@@ -197,3 +210,6 @@ func (r *wordRepository) Update(c context.Context, word *entity.Word, categoryID
 		return nil
 	})
 }
+
+
+

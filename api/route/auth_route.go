@@ -22,7 +22,9 @@ func NewAuthRouter(env *bootstrap.Env, db *gorm.DB, redis *redis.Client, publicR
 	// Endpoint publik
 	publicRouter.POST("/register", authController.Register)
 	publicRouter.POST("/login", authController.Login)
+	publicRouter.POST("/refresh", authController.Refresh)
 
 	// Endpoint yang dilindungi satpam (butuh token)
 	protectedRouter.POST("/logout", authController.Logout)
+	protectedRouter.GET("/users/me", authController.GetProfile)
 }
