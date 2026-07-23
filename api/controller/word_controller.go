@@ -38,7 +38,7 @@ func (wc *WordController) CreateWord(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Kosakata berhasil ditambahkan"})
+	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Word added successfully"})
 }
 
 // GetWords godoc
@@ -92,7 +92,7 @@ func (wc *WordController) GetWordDetail(c *gin.Context) {
 
 	response, err := wc.WordUsecase.GetWordDetail(c.Request.Context(), wordID, userID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, domain.ErrorResponse{Message: "Detail kata tidak ditemukan"})
+		c.JSON(http.StatusNotFound, domain.ErrorResponse{Message: "Word detail not found"})
 		return
 	}
 
@@ -114,11 +114,11 @@ func (wc *WordController) ToggleFavorite(c *gin.Context) {
 
 	err := wc.WordUsecase.ToggleFavorite(c.Request.Context(), wordID, userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal merubah status favorit"})
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Failed to toggle favorite status"})
 		return
 	}
 
-	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Status favorit diperbarui"})
+	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Favorite status successfully updated"})
 }
 
 
@@ -137,11 +137,11 @@ func (wc *WordController) DeleteWord(c *gin.Context) {
 	wordID := c.Param("id")
 
 	if err := wc.WordUsecase.DeleteWord(c.Request.Context(), wordID, userID); err != nil {
-		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal menghapus kosakata. Pastikan data ada."})
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Failed to delete word. Please ensure the data exists."})
 		return
 	}
 
-	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Kosakata berhasil dihapus"})
+	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Word deleted successfully"})
 }
 
 
@@ -159,7 +159,7 @@ func (wc *WordController) GetWordTypes(c *gin.Context) {
 
 	responses, err := wc.WordUsecase.GetWordTypes(c.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal mengambil tipe kata"})
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Failed to fetch word types"})
 		return
 	}
 
@@ -189,9 +189,9 @@ func (wc *WordController) UpdateWord(c *gin.Context) {
 	}
 
 	if err := wc.WordUsecase.UpdateWord(c.Request.Context(), wordID, userID, &request); err != nil {
-		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal memperbarui kosakata"})
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Failed to update word"})
 		return
 	}
 
-	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Kosakata berhasil diperbarui"})
+	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Word updated successfully"})
 }

@@ -33,11 +33,11 @@ func (nc *NoteController) Create(c *gin.Context) {
 	}
 
 	if err := nc.NoteUsecase.CreateNote(c.Request.Context(), userID, &req); err != nil {
-		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal menyimpan catatan"})
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Failed to save note"})
 		return
 	}
 
-	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Catatan berhasil disimpan"})
+	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Note saved successfully"})
 }
 
 // Fetch godoc
@@ -56,7 +56,7 @@ func (nc *NoteController) Fetch(c *gin.Context) {
 
 	notes, err := nc.NoteUsecase.GetNotes(c.Request.Context(), userID, sortBy)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal mengambil catatan"})
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Failed to fetch notes"})
 		return
 	}
 
@@ -86,11 +86,11 @@ func (nc *NoteController) Update(c *gin.Context) {
 	}
 
 	if err := nc.NoteUsecase.UpdateNote(c.Request.Context(), noteID, userID, &req); err != nil {
-		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal memperbarui catatan"})
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Failed to update note"})
 		return
 	}
 
-	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Catatan berhasil diperbarui"})
+	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Note updated successfully"})
 }
 
 // Delete godoc
@@ -108,11 +108,11 @@ func (nc *NoteController) Delete(c *gin.Context) {
 	noteID := c.Param("id")
 
 	if err := nc.NoteUsecase.DeleteNote(c.Request.Context(), noteID, userID); err != nil {
-		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal menghapus catatan"})
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Failed to delete note"})
 		return
 	}
 
-	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Catatan berhasil dihapus"})
+	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Note deleted successfully"})
 }
 
 // 2. Tambah fungsi GetDetail baru
@@ -132,7 +132,7 @@ func (nc *NoteController) GetDetail(c *gin.Context) {
 
 	note, err := nc.NoteUsecase.GetNoteDetail(c.Request.Context(), noteID, userID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, domain.ErrorResponse{Message: "Catatan tidak ditemukan"})
+		c.JSON(http.StatusNotFound, domain.ErrorResponse{Message: "Note not found"})
 		return
 	}
 
@@ -156,11 +156,11 @@ func (nc *NoteController) TogglePin(c *gin.Context) {
 	noteID := c.Param("id")
 
 	if err := nc.NoteUsecase.TogglePin(c.Request.Context(), noteID, userID); err != nil {
-		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal mengubah status pin"})
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Failed to toggle pin status"})
 		return
 	}
 
-	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Status pin berhasil diubah"})
+	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Pin status successfully updated"})
 }
 
 // ToggleFavorite godoc
@@ -178,9 +178,9 @@ func (nc *NoteController) ToggleFavorite(c *gin.Context) {
 	noteID := c.Param("id")
 
 	if err := nc.NoteUsecase.ToggleFavorite(c.Request.Context(), noteID, userID); err != nil {
-		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal mengubah status favorit"})
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Failed to toggle favorite status"})
 		return
 	}
 
-	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Status favorit berhasil diubah"})
+	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Favorite status successfully updated"})
 }

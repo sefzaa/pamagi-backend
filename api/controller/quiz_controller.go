@@ -67,7 +67,7 @@ func (qc *QuizController) SubmitQuiz(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Hasil kuis berhasil disimpan"})
+	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Quiz results saved successfully"})
 }
 
 // GetHistories godoc
@@ -105,9 +105,9 @@ func (qc *QuizController) DeleteHistory(c *gin.Context) {
 
 	err := qc.QuizUsecase.DeleteQuizHistory(c.Request.Context(), sessionID, userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal menghapus riwayat kuis"})
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Failed to delete quiz history"})
 		return
 	}
 
-	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Riwayat kuis berhasil dihapus"})
+	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Quiz history deleted successfully"})
 }
