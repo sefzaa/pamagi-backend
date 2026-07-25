@@ -362,6 +362,33 @@ definitions:
       language_name:
         type: string
     type: object
+  dto.UpdateProfileRequest:
+    properties:
+      name:
+        type: string
+      native_flag_icon:
+        type: string
+      native_language:
+        type: string
+      no_wa:
+        type: string
+      slogan:
+        type: string
+      target_languages:
+        items:
+          $ref: '#/definitions/dto.TargetLanguageReq'
+        maxItems: 2
+        minItems: 1
+        type: array
+      username:
+        type: string
+    required:
+    - name
+    - native_flag_icon
+    - native_language
+    - target_languages
+    - username
+    type: object
   dto.UpdateWordRequest:
     properties:
       category_ids:
@@ -1024,6 +1051,33 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Ambil Data User Saat Ini
+      tags:
+      - Profile
+    put:
+      consumes:
+      - application/json
+      description: Mengubah nama, username, bahasa ibu, dan target bahasa
+      parameters:
+      - description: Update Profile Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Edit Data Profil
       tags:
       - Profile
   /words:

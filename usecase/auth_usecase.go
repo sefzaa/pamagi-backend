@@ -94,14 +94,17 @@ func (u *authUsecase) Login(c context.Context, req *dto.LoginRequest) (dto.AuthR
 }
 
 func (u *authUsecase) generateTokensAndStore(c context.Context, user *entity.User) (dto.AuthResponse, error) {
-	accessToken, err := tokenutil.CreateAccessToken(user.ID, user.Name, u.env.AccessTokenSecret, 15)
+	accessToken, err := tokenutil.CreateAccessToken(user.ID, user.Name, u.env.AccessTokenSecret, 15) // Access token tetap pendek (15 menit)
 	if err != nil { return dto.AuthResponse{}, err }
 
-	refreshToken, err := tokenutil.CreateRefreshToken(user.ID, u.env.AccessTokenSecret, 7)
+	// UBAH: Set umur Refresh Token menjadi 30 Hari
+	refreshToken, err := tokenutil.CreateRefreshToken(user.ID, u.env.AccessTokenSecret, 30)
 	if err != nil { return dto.AuthResponse{}, err }
 
 	redisKey := "refresh_token:" + user.ID
-	duration := time.Hour * 24 * 7 
+	// UBAH: Set durasi penyimpanan di Redis menjadi 30 Hari
+	duration := time.Hour * 24 * 30 
+	
 	if err := u.redis.Set(c, redisKey, refreshToken, duration).Err(); err != nil {
 		return dto.AuthResponse{}, errors.New("Failed to save session on server")
 	}
@@ -196,4 +199,42 @@ func (u *authUsecase) RefreshToken(c context.Context, req *dto.RefreshTokenReque
 	}
 
 	return u.generateTokensAndStore(c, &user)
+}
+
+func (u *authUsecase) UpdateProfile(c context.Context, userID string, req *dto.UpdateProfileRequest) (dto.UserResponse, error) {
+	// Cek apakah username sudah dipakai orang lain
+	existingUser, err := u.authRepo.GetByUsername(c, req.Username)
+	if err == nil && existingUser.ID != userID {
+		return dto.UserResponse{}, errors.New("Username is already taken by someone else")
+	}
+
+	user := &entity.User{
+		ID:             userID,
+		Name:           req.Name,
+		Username:       req.Username,
+		NoWa:           req.NoWa,
+		NativeLanguage: &req.NativeLanguage,
+		NativeFlagIcon: &req.NativeFlagIcon,
+		Slogan:         req.Slogan,
+	}
+
+	var targetLanguages []entity.UserTargetLanguage
+	for _, targetReq := range req.TargetLanguages {
+		targetLanguages = append(targetLanguages, entity.UserTargetLanguage{
+			ID:           uuid.New().String(),
+			UserID:       userID,
+			LanguageCode: targetReq.LanguageCode,
+			LanguageName: targetReq.LanguageName,
+			FlagIcon:     targetReq.FlagIcon,
+		})
+	}
+	user.TargetLanguages = targetLanguages
+
+	// Eksekusi update
+	if err := u.authRepo.UpdateProfile(c, user); err != nil {
+		return dto.UserResponse{}, errors.New("Failed to update profile")
+	}
+
+	// Kembalikan profil yang baru dengan menggunakan fungsi GetProfile yang sudah ada
+	return u.GetProfile(c, userID)
 }

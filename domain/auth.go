@@ -12,6 +12,7 @@ type AuthRepository interface {
 	GetByUsername(c context.Context, username string) (entity.User, error)
 	GetByIdentifier(c context.Context, identifier string) (entity.User, error)
 	GetByID(c context.Context, id string) (entity.User, error) // TAMBAHAN INI
+	UpdateProfile(c context.Context, user *entity.User) error
 }
 
 type AuthUsecase interface {
@@ -20,4 +21,5 @@ type AuthUsecase interface {
 	Logout(c context.Context, userID string) error
 	GetProfile(c context.Context, userID string) (dto.UserResponse, error) // TAMBAHAN INI
 	RefreshToken(c context.Context, req *dto.RefreshTokenRequest) (dto.AuthResponse, error)
+	UpdateProfile(c context.Context, userID string, req *dto.UpdateProfileRequest) (dto.UserResponse, error) // TAMBAHAN INI
 }

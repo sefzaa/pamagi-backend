@@ -836,6 +836,49 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Mengubah nama, username, bahasa ibu, dan target bahasa",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Edit Data Profil",
+                "parameters": [
+                    {
+                        "description": "Update Profile Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateProfileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/words": {
@@ -1682,6 +1725,44 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "language_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateProfileRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "native_flag_icon",
+                "native_language",
+                "target_languages",
+                "username"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "native_flag_icon": {
+                    "type": "string"
+                },
+                "native_language": {
+                    "type": "string"
+                },
+                "no_wa": {
+                    "type": "string"
+                },
+                "slogan": {
+                    "type": "string"
+                },
+                "target_languages": {
+                    "type": "array",
+                    "maxItems": 2,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/dto.TargetLanguageReq"
+                    }
+                },
+                "username": {
                     "type": "string"
                 }
             }

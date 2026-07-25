@@ -55,3 +55,14 @@ type TargetLanguageRes struct {
 type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
+
+// Tambahkan struct ini di bagian bawah
+type UpdateProfileRequest struct {
+	Name             string               `json:"name" binding:"required"`
+	Username         string               `json:"username" binding:"required"`
+	NoWa             string               `json:"no_wa"`
+	NativeLanguage   string               `json:"native_language" binding:"required"`
+	NativeFlagIcon   string               `json:"native_flag_icon" binding:"required"`
+	Slogan           string               `json:"slogan"`
+	TargetLanguages  []TargetLanguageReq  `json:"target_languages" binding:"required,min=1,max=2"`
+}

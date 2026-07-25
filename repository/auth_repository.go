@@ -44,3 +44,32 @@ func (r *authRepository) GetByIdentifier(c context.Context, identifier string) (
 	err := r.db.WithContext(c).Preload("TargetLanguages").Where("email = ? OR username = ?", identifier, identifier).First(&user).Error
 	return user, err
 }
+
+func (r *authRepository) UpdateProfile(c context.Context, user *entity.User) error {
+	return r.db.WithContext(c).Transaction(func(tx *gorm.DB) error {
+		// 1. Update data user utama
+		if err := tx.Model(user).Where("id = ?", user.ID).Updates(map[string]interface{}{
+			"name":             user.Name,
+			"username":         user.Username,
+			"no_wa":            user.NoWa,
+			"native_language":  user.NativeLanguage,
+			"native_flag_icon": user.NativeFlagIcon,
+			"slogan":           user.Slogan,
+		}).Error; err != nil {
+			return err
+		}
+
+		// 2. Hapus target bahasa yang lama
+		if err := tx.Where("user_id = ?", user.ID).Delete(&entity.UserTargetLanguage{}).Error; err != nil {
+			return err
+		}
+
+		// 3. Masukkan target bahasa yang baru
+		if len(user.TargetLanguages) > 0 {
+			if err := tx.Create(&user.TargetLanguages).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}

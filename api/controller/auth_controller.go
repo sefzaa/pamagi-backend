@@ -1,11 +1,13 @@
 package controller
 
 import (
+	"errors"
 	"net/http"
 	"pamagi/domain"
 	"pamagi/domain/dto"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type AuthController struct {
@@ -27,18 +29,15 @@ func (ac *AuthController) Register(c *gin.Context) {
 	var request dto.RegisterRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: err.Error()})
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: formatValidationError(err)}) // Gunakan helper
 		return
 	}
 
-	// Menampung objek AuthResponse berupa token hasil pendaftaran sukses
 	response, err := ac.AuthUsecase.Register(c.Request.Context(), &request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: err.Error()})
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: err.Error()}) // Ubah ke 400 Bad Request
 		return
 	}
-
-	// Kembalikan status 200 OK beserta token lengkap
 	c.JSON(http.StatusOK, response)
 }
 
@@ -57,16 +56,16 @@ func (ac *AuthController) Login(c *gin.Context) {
 	var request dto.LoginRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: err.Error()})
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: formatValidationError(err)}) // Gunakan helper
 		return
 	}
 
 	response, err := ac.AuthUsecase.Login(c.Request.Context(), &request)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, domain.ErrorResponse{Message: err.Error()})
+		// Jangan beritahu secara spesifik apa yang salah demi keamanan
+		c.JSON(http.StatusUnauthorized, domain.ErrorResponse{Message: "Incorrect email/username or password."}) 
 		return
 	}
-
 	c.JSON(http.StatusOK, response)
 }
 
@@ -138,6 +137,62 @@ func (ac *AuthController) Refresh(c *gin.Context) {
 	response, err := ac.AuthUsecase.RefreshToken(c.Request.Context(), &request)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, domain.ErrorResponse{Message: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+
+func formatValidationError(err error) string {
+	var ve validator.ValidationErrors
+	if errors.As(err, &ve) {
+		// Mengambil field pertama yang error dan memberikan pesan yang jelas
+		for _, fe := range ve {
+			switch fe.Field() {
+			case "Name":
+				return "Name is required."
+			case "Username":
+				return "Username is required."
+			case "Email":
+				return "Valid email is required."
+			case "Password":
+				return "Password must be at least 6 characters."
+			case "NativeLanguage":
+				return "Native language is required."
+			case "TargetLanguages":
+				return "Please select at least 1 target language."
+			case "Identifier":
+				return "Email or Username is required."
+			}
+		}
+	}
+	return "Invalid input data. Please check your form."
+}
+
+// UpdateProfile godoc
+// @Summary Edit Data Profil
+// @Description Mengubah nama, username, bahasa ibu, dan target bahasa
+// @Tags Profile
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param request body dto.UpdateProfileRequest true "Update Profile Request"
+// @Success 200 {object} dto.UserResponse
+// @Failure 400 {object} domain.ErrorResponse
+// @Router /users/me [put]
+func (ac *AuthController) UpdateProfile(c *gin.Context) {
+	userID := c.GetString("x-user-id")
+	var request dto.UpdateProfileRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: formatValidationError(err)})
+		return
+	}
+
+	response, err := ac.AuthUsecase.UpdateProfile(c.Request.Context(), userID, &request)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: err.Error()})
 		return
 	}
 
