@@ -43,3 +43,23 @@ func (r *categoryRepository) CountUncategorized(c context.Context, userID string
 		Count(&count).Error
 	return count, err
 }
+
+// Tambahkan di bagian bawah file category_repository.go
+
+func (r *categoryRepository) Update(c context.Context, category *entity.Category) error {
+	// Pastikan hanya kategori milik user yang bersangkutan yang di-update
+	return r.db.WithContext(c).Model(&entity.Category{}).
+		Where("id = ? AND user_id = ?", category.ID, category.UserID).
+		Updates(map[string]interface{}{
+			"name": category.Name,
+			"icon": category.Icon,
+		}).Error
+}
+
+func (r *categoryRepository) Delete(c context.Context, categoryID string, userID string) error {
+	// GORM akan melakukan soft-delete atau hard-delete tergantung konfigurasi modelmu
+	// Pastikan menghapus berdasarkan ID dan UserID untuk keamanan
+	return r.db.WithContext(c).
+		Where("id = ? AND user_id = ?", categoryID, userID).
+		Delete(&entity.Category{}).Error
+}

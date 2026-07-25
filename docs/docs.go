@@ -94,6 +94,102 @@ const docTemplate = `{
                 }
             }
         },
+        "/categories/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Memperbarui nama atau ikon kategori milik user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Edit Kategori",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID Kategori",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data Kategori Baru",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCategoryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Menghapus kategori secara permanen",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Hapus Kategori",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID Kategori",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.SuccessResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/flashcards/generate": {
             "post": {
                 "security": [
@@ -1138,8 +1234,6 @@ const docTemplate = `{
         "dto.CreateWordRequest": {
             "type": "object",
             "required": [
-                "native_word",
-                "part_of_speech",
                 "targets"
             ],
             "properties": {
@@ -1157,15 +1251,17 @@ const docTemplate = `{
                     }
                 },
                 "native_word": {
+                    "description": "Hapus binding:\"required\"",
                     "type": "string"
                 },
                 "part_of_speech": {
+                    "description": "Hapus binding:\"required\"",
                     "type": "string"
                 },
                 "targets": {
+                    "description": "Array-nya wajib ada, tapi isinya boleh kosong",
                     "type": "array",
                     "maxItems": 2,
-                    "minItems": 1,
                     "items": {
                         "$ref": "#/definitions/dto.WordTargetReq"
                     }
@@ -1593,8 +1689,6 @@ const docTemplate = `{
         "dto.UpdateWordRequest": {
             "type": "object",
             "required": [
-                "native_word",
-                "part_of_speech",
                 "targets"
             ],
             "properties": {
@@ -1612,15 +1706,16 @@ const docTemplate = `{
                     }
                 },
                 "native_word": {
+                    "description": "Hapus binding:\"required\"",
                     "type": "string"
                 },
                 "part_of_speech": {
+                    "description": "Hapus binding:\"required\"",
                     "type": "string"
                 },
                 "targets": {
                     "type": "array",
                     "maxItems": 2,
-                    "minItems": 1,
                     "items": {
                         "$ref": "#/definitions/dto.WordTargetReq"
                     }
@@ -1752,14 +1847,15 @@ const docTemplate = `{
         "dto.WordTargetReq": {
             "type": "object",
             "required": [
-                "language_code",
-                "target_word"
+                "language_code"
             ],
             "properties": {
                 "language_code": {
+                    "description": "Language code tetap wajib agar tahu bendera apa yang ditampilkan",
                     "type": "string"
                 },
                 "target_word": {
+                    "description": "Hapus binding:\"required\"",
                     "type": "string"
                 }
             }

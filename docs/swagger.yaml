@@ -62,18 +62,18 @@ definitions:
         maxItems: 3
         type: array
       native_word:
+        description: Hapus binding:"required"
         type: string
       part_of_speech:
+        description: Hapus binding:"required"
         type: string
       targets:
+        description: Array-nya wajib ada, tapi isinya boleh kosong
         items:
           $ref: '#/definitions/dto.WordTargetReq'
         maxItems: 2
-        minItems: 1
         type: array
     required:
-    - native_word
-    - part_of_speech
     - targets
     type: object
   dto.ExampleTargetReq:
@@ -374,18 +374,17 @@ definitions:
         maxItems: 3
         type: array
       native_word:
+        description: Hapus binding:"required"
         type: string
       part_of_speech:
+        description: Hapus binding:"required"
         type: string
       targets:
         items:
           $ref: '#/definitions/dto.WordTargetReq'
         maxItems: 2
-        minItems: 1
         type: array
     required:
-    - native_word
-    - part_of_speech
     - targets
     type: object
   dto.UserResponse:
@@ -471,12 +470,13 @@ definitions:
   dto.WordTargetReq:
     properties:
       language_code:
+        description: Language code tetap wajib agar tahu bendera apa yang ditampilkan
         type: string
       target_word:
+        description: Hapus binding:"required"
         type: string
     required:
     - language_code
-    - target_word
     type: object
   dto.WordTargetRes:
     properties:
@@ -549,6 +549,67 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Tambah Kategori Baru
+      tags:
+      - Categories
+  /categories/{id}:
+    delete:
+      description: Menghapus kategori secara permanen
+      parameters:
+      - description: ID Kategori
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Hapus Kategori
+      tags:
+      - Categories
+    put:
+      consumes:
+      - application/json
+      description: Memperbarui nama atau ikon kategori milik user
+      parameters:
+      - description: ID Kategori
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data Kategori Baru
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Edit Kategori
       tags:
       - Categories
   /flashcards/generate:

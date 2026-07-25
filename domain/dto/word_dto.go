@@ -5,16 +5,24 @@ package dto
 // ==========================================
 
 type CreateWordRequest struct {
-	NativeWord   string           `json:"native_word" binding:"required"`
-	PartOfSpeech string           `json:"part_of_speech" binding:"required"`
+	NativeWord   string           `json:"native_word"`    // Hapus binding:"required"
+	PartOfSpeech string           `json:"part_of_speech"` // Hapus binding:"required"
 	CategoryIDs  []string         `json:"category_ids"`
-	Targets      []WordTargetReq  `json:"targets" binding:"required,min=1,max=2"`
+	Targets      []WordTargetReq  `json:"targets" binding:"required,max=2"` // Array-nya wajib ada, tapi isinya boleh kosong
 	Examples     []WordExampleReq `json:"examples" binding:"max=3"`
 }
 
 type WordTargetReq struct {
-	LanguageCode string `json:"language_code" binding:"required"`
-	TargetWord   string `json:"target_word" binding:"required"`
+	LanguageCode string `json:"language_code" binding:"required"` // Language code tetap wajib agar tahu bendera apa yang ditampilkan
+	TargetWord   string `json:"target_word"`                      // Hapus binding:"required"
+}
+
+type UpdateWordRequest struct {
+	NativeWord   string           `json:"native_word"`    // Hapus binding:"required"
+	PartOfSpeech string           `json:"part_of_speech"` // Hapus binding:"required"
+	CategoryIDs  []string         `json:"category_ids"`
+	Targets      []WordTargetReq  `json:"targets" binding:"required,max=2"`
+	Examples     []WordExampleReq `json:"examples" binding:"max=3"`
 }
 
 type WordExampleReq struct {
@@ -27,13 +35,6 @@ type ExampleTargetReq struct {
 	Sentence     string `json:"sentence" binding:"required"`
 }
 
-type UpdateWordRequest struct {
-	NativeWord   string           `json:"native_word" binding:"required"`
-	PartOfSpeech string           `json:"part_of_speech" binding:"required"`
-	CategoryIDs  []string         `json:"category_ids"`
-	Targets      []WordTargetReq  `json:"targets" binding:"required,min=1,max=2"`
-	Examples     []WordExampleReq `json:"examples" binding:"max=3"`
-}
 
 type WordFilterRequest struct {
 	TargetLanguageCode string `form:"target_language_code"`

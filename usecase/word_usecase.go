@@ -19,6 +19,12 @@ func NewWordUsecase(wordRepo domain.WordRepository) domain.WordUsecase {
 func (u *wordUsecase) CreateWord(c context.Context, userID string, req *dto.CreateWordRequest) error {
 	wordID := uuid.New().String()
 
+	// Default ke "NONE" jika kosong
+	partOfSpeech := req.PartOfSpeech
+	if partOfSpeech == "" {
+		partOfSpeech = "NONE"
+	}
+
 	// 1. Looping Anak (Target Bahasa)
 	var targets []entity.WordTarget
 	for _, t := range req.Targets {
@@ -54,11 +60,11 @@ func (u *wordUsecase) CreateWord(c context.Context, userID string, req *dto.Crea
 	}
 
 	// 3. Bungkus menjadi 1 Konsep Utama (Induk)
-	word := &entity.Word{
+word := &entity.Word{
 		ID:           wordID,
 		UserID:       userID,
 		NativeWord:   req.NativeWord,
-		PartOfSpeech: req.PartOfSpeech,
+		PartOfSpeech: partOfSpeech, // Gunakan variabel yang sudah di-cek
 		Targets:      targets,
 		Examples:     examples,
 	}
@@ -160,7 +166,14 @@ func (u *wordUsecase) DeleteWord(c context.Context, wordID string, userID string
 	return u.wordRepo.Delete(c, wordID, userID)
 }
 
+
 func (u *wordUsecase) UpdateWord(c context.Context, wordID string, userID string, req *dto.UpdateWordRequest) error {
+	// Default ke "NONE" jika kosong
+	partOfSpeech := req.PartOfSpeech
+	if partOfSpeech == "" {
+		partOfSpeech = "NONE"
+	}
+
 	var targets []entity.WordTarget
 	for _, t := range req.Targets {
 		targets = append(targets, entity.WordTarget{
@@ -190,12 +203,11 @@ func (u *wordUsecase) UpdateWord(c context.Context, wordID string, userID string
 			Targets:        exTargets,
 		})
 	}
-
 	word := &entity.Word{
 		ID:           wordID,
 		UserID:       userID,
 		NativeWord:   req.NativeWord,
-		PartOfSpeech: req.PartOfSpeech,
+		PartOfSpeech: partOfSpeech, // Gunakan variabel yang sudah di-cek
 		Targets:      targets,
 		Examples:     examples,
 	}

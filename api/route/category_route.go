@@ -18,4 +18,6 @@ func NewCategoryRouter(db *gorm.DB, protectedRouter *gin.RouterGroup) {
 
 	protectedRouter.POST("/categories", categoryController.CreateCategory)
 	protectedRouter.GET("/categories", categoryController.GetCategories)
+	protectedRouter.PUT("/categories/:id", categoryController.UpdateCategory)
+	protectedRouter.DELETE("/categories/:id", categoryController.DeleteCategory)
 }

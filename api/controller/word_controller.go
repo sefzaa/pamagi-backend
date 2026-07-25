@@ -27,14 +27,14 @@ func (wc *WordController) CreateWord(c *gin.Context) {
 	userID := c.GetString("x-user-id")
 	var request dto.CreateWordRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: err.Error()})
+if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: "Invalid input data format. Please check your request payload."})
 		return
 	}
 
 	err := wc.WordUsecase.CreateWord(c.Request.Context(), userID, &request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: err.Error()})
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Failed to create word. Please try again later."})
 		return
 	}
 
@@ -183,13 +183,13 @@ func (wc *WordController) UpdateWord(c *gin.Context) {
 	wordID := c.Param("id")
 	var request dto.UpdateWordRequest // Harus UpdateWordRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: err.Error()})
+if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: "Invalid input data format. Please check your request payload."})
 		return
 	}
 
 	if err := wc.WordUsecase.UpdateWord(c.Request.Context(), wordID, userID, &request); err != nil {
-		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Failed to update word"})
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Failed to update word. Ensure the word exists and belongs to you."})
 		return
 	}
 

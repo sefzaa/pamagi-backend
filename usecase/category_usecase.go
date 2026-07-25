@@ -68,3 +68,20 @@ func (u *categoryUsecase) GetCategories(c context.Context, userID string, forDro
 	}
 	return responses, nil
 }
+
+// Tambahkan di bagian bawah file category_usecase.go
+
+func (u *categoryUsecase) UpdateCategory(c context.Context, categoryID string, userID string, req *dto.CreateCategoryRequest) error {
+	category := &entity.Category{
+		ID:     categoryID,
+		UserID: userID,
+		Name:   req.Name,
+		Icon:   req.Icon,
+	}
+
+	return u.categoryRepo.Update(c, category)
+}
+
+func (u *categoryUsecase) DeleteCategory(c context.Context, categoryID string, userID string) error {
+	return u.categoryRepo.Delete(c, categoryID, userID)
+}
