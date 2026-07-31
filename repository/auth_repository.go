@@ -73,3 +73,8 @@ func (r *authRepository) UpdateProfile(c context.Context, user *entity.User) err
 		return nil
 	})
 }
+
+func (r *authRepository) UpdatePassword(c context.Context, userID string, passwordHash string) error {
+	// Mengupdate kolom password_hash berdasarkan userID
+	return r.db.WithContext(c).Model(&entity.User{}).Where("id = ?", userID).Update("password_hash", passwordHash).Error
+}

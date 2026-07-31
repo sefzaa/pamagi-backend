@@ -66,3 +66,18 @@ type UpdateProfileRequest struct {
 	Slogan           string               `json:"slogan"`
 	TargetLanguages  []TargetLanguageReq  `json:"target_languages" binding:"required,min=1,max=2"`
 }
+
+type ForgotPasswordRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+type VerifyOTPRequest struct {
+	Email string `json:"email" binding:"required,email"`
+	OTP   string `json:"otp" binding:"required,len=6"`
+}
+
+type ResetPasswordRequest struct {
+	Email       string `json:"email" binding:"required,email"`
+	ResetToken  string `json:"reset_token" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required,min=6"`
+}

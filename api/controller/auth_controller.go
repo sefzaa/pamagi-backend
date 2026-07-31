@@ -198,3 +198,84 @@ func (ac *AuthController) UpdateProfile(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+// ForgotPassword godoc
+// @Summary Request OTP Lupa Password
+// @Description Mengirimkan kode OTP 6 digit ke email pengguna
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body dto.ForgotPasswordRequest true "Forgot Password Request"
+// @Success 200 {object} domain.SuccessResponse
+// @Failure 400 {object} domain.ErrorResponse
+// @Router /forgot-password [post]
+func (ac *AuthController) ForgotPassword(c *gin.Context) {
+	var request dto.ForgotPasswordRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: "Format email tidak valid"})
+		return
+	}
+
+	err := ac.AuthUsecase.ForgotPassword(c.Request.Context(), &request)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Gagal memproses permintaan"})
+		return
+	}
+
+	c.JSON(http.StatusOK, domain.SuccessResponse{
+		Message: "Jika email terdaftar, kode OTP telah dikirimkan.",
+	})
+}
+
+// VerifyOTP godoc
+// @Summary Verifikasi OTP
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body dto.VerifyOTPRequest true "Verify OTP Request"
+// @Success 200 {object} domain.SuccessResponse
+// @Router /verify-otp [post]
+func (ac *AuthController) VerifyOTP(c *gin.Context) {
+	var request dto.VerifyOTPRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: "Format email atau OTP tidak valid"})
+		return
+	}
+
+	// Kembalikan Reset Token ke Flutter
+	resetToken, err := ac.AuthUsecase.VerifyOTP(c.Request.Context(), &request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "OTP berhasil diverifikasi",
+		"reset_token": resetToken,
+	})
+}
+
+// ResetPassword godoc
+// @Summary Buat Password Baru
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body dto.ResetPasswordRequest true "Reset Password Request"
+// @Success 200 {object} domain.SuccessResponse
+// @Router /reset-password [post]
+func (ac *AuthController) ResetPassword(c *gin.Context) {
+	var request dto.ResetPasswordRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: "Format input tidak valid"})
+		return
+	}
+
+	err := ac.AuthUsecase.ResetPassword(c.Request.Context(), &request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, domain.SuccessResponse{Message: "Password berhasil diubah. Silakan login kembali."})
+}

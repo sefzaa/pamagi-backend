@@ -95,6 +95,13 @@ definitions:
       sentence:
         type: string
     type: object
+  dto.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
   dto.GenerateFlashcardRequest:
     properties:
       category_ids:
@@ -305,6 +312,20 @@ definitions:
     - target_languages
     - username
     type: object
+  dto.ResetPasswordRequest:
+    properties:
+      email:
+        type: string
+      new_password:
+        minLength: 6
+        type: string
+      reset_token:
+        type: string
+    required:
+    - email
+    - new_password
+    - reset_token
+    type: object
   dto.SubmitQuizDetail:
     properties:
       is_correct:
@@ -436,6 +457,16 @@ definitions:
         type: array
       username:
         type: string
+    type: object
+  dto.VerifyOTPRequest:
+    properties:
+      email:
+        type: string
+      otp:
+        type: string
+    required:
+    - email
+    - otp
     type: object
   dto.WordExampleReq:
     properties:
@@ -737,6 +768,32 @@ paths:
       summary: Kirim Hasil Kuis
       tags:
       - Flashcard
+  /forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Mengirimkan kode OTP 6 digit ke email pengguna
+      parameters:
+      - description: Forgot Password Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Request OTP Lupa Password
+      tags:
+      - Auth
   /login:
     post:
       consumes:
@@ -1038,6 +1095,27 @@ paths:
       summary: Register user baru
       tags:
       - Auth
+  /reset-password:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Reset Password Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+      summary: Buat Password Baru
+      tags:
+      - Auth
   /users/me:
     get:
       description: Mendapatkan info profil, bahasa ibu, dan bahasa yang dipelajari
@@ -1080,6 +1158,27 @@ paths:
       summary: Edit Data Profil
       tags:
       - Profile
+  /verify-otp:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Verify OTP Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.VerifyOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+      summary: Verifikasi OTP
+      tags:
+      - Auth
   /words:
     get:
       description: Menampilkan daftar kosakata dengan fitur filter kombo (limit 20)

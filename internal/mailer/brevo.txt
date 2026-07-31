@@ -1,0 +1,64 @@
+// 
+
+package mailer
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"pamagi/bootstrap"
+	"pamagi/domain"
+)
+
+type resendService struct {
+	env *bootstrap.Env
+}
+
+func NewResendService(env *bootstrap.Env) domain.EmailService {
+	return &resendService{env: env}
+}
+
+func (r *resendService) SendOTP(ctx context.Context, toEmail string, otpCode string) error {
+	url := "https://api.resend.com/emails"
+
+	// Struktur payload REST API Resend
+	payload := map[string]interface{}{
+		"from":    fmt.Sprintf("Pamagi Support <%s>", r.env.ResendSenderEmail),
+		"to":      []string{toEmail},
+		"subject": "Kode OTP Pemulihan Password",
+		"html": fmt.Sprintf(
+			"<html><body><h2>Halo!</h2><p>Kode OTP kamu adalah: <strong>%s</strong></p><p>Berlaku selama 5 menit. Jangan berikan kode ini ke siapa pun.</p></body></html>",
+			otpCode,
+		),
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	// Header untuk Resend
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+r.env.ResendAPIKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("gagal mengirim email via Resend")
+	}
+
+	return nil
+}

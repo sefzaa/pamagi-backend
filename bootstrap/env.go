@@ -20,6 +20,12 @@ type Env struct {
 	RedisHost              string `mapstructure:"REDIS_HOST"`
 	RedisPort              string `mapstructure:"REDIS_PORT"`
 	RedisPassword          string `mapstructure:"REDIS_PASSWORD"`
+	GmailSenderEmail string `mapstructure:"GMAIL_SENDER_EMAIL"`
+	GmailAppPassword string `mapstructure:"GMAIL_APP_PASSWORD"`
+	// BrevoAPIKey            string `mapstructure:"BREVO_API_KEY"`
+	// BrevoSenderEmail       string `mapstructure:"BREVO_SENDER_EMAIL"`
+	// ResendAPIKey           string `mapstructure:"RESEND_API_KEY"`
+	// ResendSenderEmail      string `mapstructure:"RESEND_SENDER_EMAIL"`
 
 }
 
